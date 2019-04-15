@@ -22,6 +22,12 @@ export function activate(context: vscode.ExtensionContext) {
 		vscode.window.showInformationMessage('Hello Erlang!');
 	});
 
+	let diss = vscode.commands.registerTextEditorCommand('extension.findFilee', (textEditor: vscode.TextEditor, edit: vscode.TextEditorEdit, args: any[]) => {
+		let textLine = textEditor.document.lineAt(textEditor.selection.start);
+		let str = textEditor.document.getText(textEditor.selection);
+		vscode.window.showInformationMessage(textLine.text);
+	});
+
 	// ------------------------------------------------------------------------
 
 	console.log('decorator sample is activated');
@@ -37,14 +43,14 @@ export function activate(context: vscode.ExtensionContext) {
 		light: {
 			// this color will be used in light color themes
 			borderColor: 'darkblue',
-			borderRadius: '2px',
-			cursor: 'pointer'
+			borderRadius: '2px'
+			// cursor: 'pointer'
 		},
 		dark: {
 			// this color will be used in dark color themes
 			borderColor: 'lightblue',
-			borderRadius: '2px',
-			cursor: 'pointer'
+			borderRadius: '2px'
+			// cursor: 'pointer'
 		}
 	});
 
@@ -105,6 +111,7 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	}, null, context.subscriptions);
 
+	context.subscriptions.push(diss);
 	context.subscriptions.push(disposable);
 }
 

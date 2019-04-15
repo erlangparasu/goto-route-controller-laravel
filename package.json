@@ -18,8 +18,20 @@
 			{
 				"command": "extension.helloWorld",
 				"title": "Hello World"
+			},
+			{
+				"command": "extension.findFilee",
+				"title": "Goto Method"
 			}
-		]
+		],
+		"menus": {
+			"editor/context": [
+				{
+					"command": "extension.findFilee",
+					"when": "editorTextFocus"
+				}
+			]
+		}
 	},
 	"scripts": {
 		"vscode:prepublish": "yarn run compile",
