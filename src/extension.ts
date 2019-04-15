@@ -25,8 +25,35 @@ export function activate(context: vscode.ExtensionContext) {
 	let diss = vscode.commands.registerTextEditorCommand('extension.findFilee', (textEditor: vscode.TextEditor, edit: vscode.TextEditorEdit, args: any[]) => {
 		let textLine = textEditor.document.lineAt(textEditor.selection.start);
 		let str = textEditor.document.getText(textEditor.selection);
-		vscode.window.showInformationMessage(textLine.text);
+		// vscode.window.showInformationMessage(textLine.text);
+
+		let activeEditor = textEditor;
+		const regEx = /([,])(.?)(['])(.+)([a-zA-Z]{1,})([@])([a-zA-Z]{1,})(['])/g;
+		// const text = activeEditor.document.getText();
+		const text = textLine.text;
+		const smallNumbers: vscode.DecorationOptions[] = [];
+		const largeNumbers: vscode.DecorationOptions[] = [];
+		let match;
+		while (match = regEx.exec(text)) {
+			const startPos = activeEditor.document.positionAt(match.index);
+			const endPos = activeEditor.document.positionAt(match.index + match[0].length);
+			const decoration = { range: new vscode.Range(startPos, endPos), hoverMessage: 'Number **' + match[0] + '**' };
+			// if (match[0].length < 3) {
+			// smallNumbers.push(decoration);
+			// } else {
+			// largeNumbers.push(decoration);
+			// }
+
+			let strResultMatch = match[0];
+			vscode.window.showInformationMessage(strResultMatch);
+
+			parsePhpClassAndMethod(strResultMatch);
+		}
 	});
+
+	function parsePhpClassAndMethod(str: string) {
+		// TODO: ?
+	}
 
 	// ------------------------------------------------------------------------
 
