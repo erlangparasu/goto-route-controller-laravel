@@ -45,14 +45,19 @@ export function activate(context: vscode.ExtensionContext) {
 			// }
 
 			let strResultMatch = match[0];
-			vscode.window.showInformationMessage(strResultMatch);
+			// vscode.window.showInformationMessage(strResultMatch);
 
 			parsePhpClassAndMethod(strResultMatch);
 		}
 	});
 
 	function parsePhpClassAndMethod(str: string) {
-		// TODO: ?
+		let strFiltered = str.replace(',', '');
+		strFiltered = strFiltered.trim();
+		strFiltered = strFiltered.replace(/[\']/g, '');
+		strFiltered = strFiltered.replace(/["]/g, '');
+
+		vscode.window.showInformationMessage(strFiltered);
 	}
 
 	// ------------------------------------------------------------------------
