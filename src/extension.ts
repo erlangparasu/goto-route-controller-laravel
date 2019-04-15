@@ -36,11 +36,15 @@ export function activate(context: vscode.ExtensionContext) {
 		overviewRulerLane: vscode.OverviewRulerLane.Right,
 		light: {
 			// this color will be used in light color themes
-			borderColor: 'darkblue'
+			borderColor: 'darkblue',
+			borderRadius: '2px',
+			cursor: 'pointer'
 		},
 		dark: {
 			// this color will be used in dark color themes
-			borderColor: 'lightblue'
+			borderColor: 'lightblue',
+			borderRadius: '2px',
+			cursor: 'pointer'
 		}
 	});
 
@@ -67,9 +71,9 @@ export function activate(context: vscode.ExtensionContext) {
 			const endPos = activeEditor.document.positionAt(match.index + match[0].length);
 			const decoration = { range: new vscode.Range(startPos, endPos), hoverMessage: 'Number **' + match[0] + '**' };
 			// if (match[0].length < 3) {
-			// 	smallNumbers.push(decoration);
+			smallNumbers.push(decoration);
 			// } else {
-				largeNumbers.push(decoration);
+			// largeNumbers.push(decoration);
 			// }
 		}
 		activeEditor.setDecorations(smallNumberDecorationType, smallNumbers);
