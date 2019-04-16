@@ -93,7 +93,7 @@ export function activate(context: vscode.ExtensionContext) {
 					}
 
 					// 2. Find Method Name
-					let methodPosition: number = docText.indexOf('function ' + strPhpMethodName + '(');
+					let methodPosition: number = docText.indexOf(' function ' + strPhpMethodName + '(');
 					// vscode.window.showInformationMessage(JSON.stringify(methodPosition));
 					if (methodPosition == -1) {
 						// Not Found
@@ -107,10 +107,18 @@ export function activate(context: vscode.ExtensionContext) {
 						// Not Found
 						return;
 					}
+
+					// 4. Find Class Name
+					let classNamePosition: number = docText.indexOf('class ' + strFilenamePrefix + ' ');
+					if (classNamePosition == -1) {
+						// Not Found
+						return;
+					}
+
 					vscode.window.showInformationMessage(strPhpNamespace);
 
-					let posStart = textDocument.positionAt(methodPosition + 'function '.length);
-					let posEnd = textDocument.positionAt('function '.length + methodPosition + strPhpMethodName.length);
+					let posStart = textDocument.positionAt(methodPosition + ' function '.length);
+					let posEnd = textDocument.positionAt(' function '.length + methodPosition + strPhpMethodName.length);
 					let range = new vscode.Range(
 						posStart,
 						posEnd
