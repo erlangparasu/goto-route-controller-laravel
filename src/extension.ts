@@ -6,7 +6,7 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 
-// this method is called when your extension is activated
+// This method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
 
@@ -30,7 +30,8 @@ export function activate(context: vscode.ExtensionContext) {
 		// vscode.window.showInformationMessage(textLine.text);
 
 		let activeEditor = textEditor;
-		const regEx = /([,])(.?)(['])(.+)([a-zA-Z]{1,})([@])([a-zA-Z]{1,})(['])/g;
+		// const regEx = /([,])(.?)(['])(.+)([a-zA-Z]{1,})([@])([a-zA-Z]{1,})(['])/g;
+		const regEx = /'([a-zA-Z\\]+)\w+@\w+'/g;
 		// const text = activeEditor.document.getText();
 		const text = textLine.text;
 		const smallNumbers: vscode.DecorationOptions[] = [];
@@ -39,6 +40,7 @@ export function activate(context: vscode.ExtensionContext) {
 		while (match = regEx.exec(text)) {
 			const startPos = activeEditor.document.positionAt(match.index);
 			const endPos = activeEditor.document.positionAt(match.index + match[0].length);
+
 			const decoration = { range: new vscode.Range(startPos, endPos), hoverMessage: 'Number **' + match[0] + '**' };
 			// if (match[0].length < 3) {
 			// smallNumbers.push(decoration);
@@ -80,43 +82,22 @@ export function activate(context: vscode.ExtensionContext) {
 			vscode.workspace.openTextDocument(uris[0]).then((textDocument: vscode.TextDocument) => {
 				// let selection = null;
 
-				let strFunctionPrefix = 'function ';
 				let docText = textDocument.getText();
-				let methodPosition: number = docText.indexOf(strFunctionPrefix + strPhpMethodName);
+				let methodPosition: number = docText.indexOf('function ' + strPhpMethodName + '(');
 				// vscode.window.showInformationMessage(JSON.stringify(methodPosition));
 
-				let posStart = textDocument.positionAt(methodPosition + strFunctionPrefix.length);
-				let posEnd = textDocument.positionAt(methodPosition + strFunctionPrefix.length);
+				let posStart = textDocument.positionAt('function '.length + methodPosition + '('.length);
+				let posEnd = textDocument.positionAt('function '.length + methodPosition + '('.length);
 				let range = new vscode.Range(
 					posStart,
 					posEnd
 				);
 
 				let options: vscode.TextDocumentShowOptions = {
-					/**
-					 * An optional view column in which the [editor](#TextEditor) should be shown.
-					 * The default is the [active](#ViewColumn.Active), other values are adjusted to
-					 * be `Min(column, columnCount + 1)`, the [active](#ViewColumn.Active)-column is
-					 * not adjusted. Use [`ViewColumn.Beside`](#ViewColumn.Beside) to open the
-					 * editor to the side of the currently active one.
-					 */
 					viewColumn: undefined,
-
-					/**
-					 * An optional flag that when `true` will stop the [editor](#TextEditor) from taking focus.
-					 */
 					preserveFocus: false,
-
-					/**
-					 * An optional flag that controls if an [editor](#TextEditor)-tab will be replaced
-					 * with the next editor or if it will be kept.
-					 */
 					preview: false,
-
-					/**
-					 * An optional selection to apply for the document in the [editor](#TextEditor).
-					 */
-					selection: range
+					selection: range,
 				};
 				vscode.window.showTextDocument(textDocument.uri, options);
 			});
@@ -125,34 +106,34 @@ export function activate(context: vscode.ExtensionContext) {
 
 	// ------------------------------------------------------------------------
 
-	console.log('decorator sample is activated');
+	console.log('Decorator sample is activated');
 
 	let timeout: NodeJS.Timer | undefined = undefined;
 
-	// create a decorator type that we use to decorate small numbers
+	// Create a decorator type that we use to decorate small numbers
 	const smallNumberDecorationType = vscode.window.createTextEditorDecorationType({
-		borderWidth: '0.1px',
+		borderWidth: '1px',
 		borderStyle: 'solid',
 		overviewRulerColor: 'blue',
 		overviewRulerLane: vscode.OverviewRulerLane.Right,
 		light: {
-			// this color will be used in light color themes
+			// This color will be used in light color themes
 			borderColor: 'darkblue',
 			borderRadius: '2px'
 			// cursor: 'pointer'
 		},
 		dark: {
-			// this color will be used in dark color themes
+			// This color will be used in dark color themes
 			borderColor: 'lightblue',
 			borderRadius: '2px'
 			// cursor: 'pointer'
 		}
 	});
 
-	// create a decorator type that we use to decorate large numbers
+	// Create a decorator type that we use to decorate large numbers
 	const largeNumberDecorationType = vscode.window.createTextEditorDecorationType({
 		cursor: 'crosshair',
-		// use a themable color. See package.json for the declaration and default values.
+		// Use a themable color. See package.json for the declaration and default values.
 		backgroundColor: { id: 'myextension.largeNumberBackground' }
 	});
 
@@ -162,7 +143,8 @@ export function activate(context: vscode.ExtensionContext) {
 		if (!activeEditor) {
 			return;
 		}
-		const regEx = /([,])(.?)(['])(.+)([a-zA-Z]{1,})([@])([a-zA-Z]{1,})(['])/g;
+		// const regEx = /([,])(.?)(['])(.+)([a-zA-Z]{1,})([@])([a-zA-Z]{1,})(['])/g;
+		const regEx = /'([a-zA-Z\\]+)\w+@\w+'/g;
 		const text = activeEditor.document.getText();
 		const smallNumbers: vscode.DecorationOptions[] = [];
 		const largeNumbers: vscode.DecorationOptions[] = [];
@@ -210,5 +192,7 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(disposable);
 }
 
-// this method is called when your extension is deactivated
-export function deactivate() { }
+// This method is called when your extension is deactivated
+export function deactivate() {
+	//
+}
