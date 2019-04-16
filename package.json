@@ -1,8 +1,8 @@
 {
-	"name": "goto-method-laravel-route",
-	"displayName": "hello",
-	"description": "desc",
-	"version": "0.0.1",
+	"name": "laravel-route-class-opener",
+	"displayName": "Laravel Route Class Opener",
+	"description": "Laravel Route Class Opener",
+	"version": "0.1.0",
 	"engines": {
 		"vscode": "^1.33.0"
 	},
@@ -10,24 +10,24 @@
 		"Other"
 	],
 	"activationEvents": [
-		"onCommand:extension.helloWorld"
+		"onLanguage:php"
 	],
 	"main": "./out/extension.js",
 	"contributes": {
 		"commands": [
 			{
-				"command": "extension.helloWorld",
-				"title": "Enable Hello World"
+				"command": "extension.enableLaravelRouteClassOpener",
+				"title": "Enable LaravelRouteClassOpener"
 			},
 			{
-				"command": "extension.findFilee",
-				"title": "Goto Method"
+				"command": "extension.openPhpClassFile",
+				"title": "Open PHP Class"
 			}
 		],
 		"menus": {
 			"editor/context": [
 				{
-					"command": "extension.findFilee",
+					"command": "extension.openPhpClassFile",
 					"when": "editorTextFocus"
 				}
 			]

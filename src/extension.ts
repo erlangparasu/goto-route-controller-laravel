@@ -1,5 +1,7 @@
 'use strict';
 
+// Created by Erlang Parasu 2019
+
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
@@ -10,19 +12,19 @@ export function activate(context: vscode.ExtensionContext) {
 
 	// Use the console to output diagnostic information (console.log) and errors (console.error)
 	// This line of code will only be executed once when your extension is activated
-	console.log('Congratulations, your extension "hello" is now active!');
+	console.log('Congratulations, your extension "LaravelRouteClassOpener" is now active!');
 
 	// The command has been defined in the package.json file
 	// Now provide the implementation of the command with registerCommand
 	// The commandId parameter must match the command field in package.json
-	let disposable = vscode.commands.registerCommand('extension.helloWorld', () => {
+	let disposable = vscode.commands.registerCommand('enableLaravelRouteClassOpener', () => {
 		// The code you place here will be executed every time your command is executed
 
 		// Display a message box to the user
-		vscode.window.showInformationMessage('Hello Erlang!');
+		vscode.window.showInformationMessage('Laravel Route Class Opener enabled!');
 	});
 
-	let diss = vscode.commands.registerTextEditorCommand('extension.findFilee', (textEditor: vscode.TextEditor, edit: vscode.TextEditorEdit, args: any[]) => {
+	let diss = vscode.commands.registerTextEditorCommand('extension.openPhpClassFile', (textEditor: vscode.TextEditor, edit: vscode.TextEditorEdit, args: any[]) => {
 		let textLine = textEditor.document.lineAt(textEditor.selection.start);
 		let str = textEditor.document.getText(textEditor.selection);
 		// vscode.window.showInformationMessage(textLine.text);
@@ -64,19 +66,59 @@ export function activate(context: vscode.ExtensionContext) {
 		let strPhpMethodName = arrStr[1];
 
 		// vscode.window.showInformationMessage(strPhpNamespace);
-		// vscode.window.showInformationMessage(strPhpMethodName);
+		// vscode.window.showInformationMessage('Going to method: ' + strPhpMethodName + '()');
 
 		let arrStrPhpNamespace = strPhpNamespace.split('\\');
 		let strFilenamePrefix = arrStrPhpNamespace[arrStrPhpNamespace.length - 1];
-		vscode.window.showInformationMessage(strFilenamePrefix);
+		// vscode.window.showInformationMessage(strFilenamePrefix);
 
 		let files = vscode.workspace.findFiles('**/' + strFilenamePrefix + '.php');
 		files.then((uris: vscode.Uri[]) => {
 			let filePath = uris[0].toString();
-			vscode.window.showInformationMessage(JSON.stringify(filePath));
+			// vscode.window.showInformationMessage(JSON.stringify(filePath));
 
 			vscode.workspace.openTextDocument(uris[0]).then((textDocument: vscode.TextDocument) => {
-				vscode.window.showTextDocument(textDocument);
+				// let selection = null;
+
+				let strFunctionPrefix = 'function ';
+				let docText = textDocument.getText();
+				let methodPosition: number = docText.indexOf(strFunctionPrefix + strPhpMethodName);
+				// vscode.window.showInformationMessage(JSON.stringify(methodPosition));
+
+				let posStart = textDocument.positionAt(methodPosition + strFunctionPrefix.length);
+				let posEnd = textDocument.positionAt(methodPosition + strFunctionPrefix.length);
+				let range = new vscode.Range(
+					posStart,
+					posEnd
+				);
+
+				let options: vscode.TextDocumentShowOptions = {
+					/**
+					 * An optional view column in which the [editor](#TextEditor) should be shown.
+					 * The default is the [active](#ViewColumn.Active), other values are adjusted to
+					 * be `Min(column, columnCount + 1)`, the [active](#ViewColumn.Active)-column is
+					 * not adjusted. Use [`ViewColumn.Beside`](#ViewColumn.Beside) to open the
+					 * editor to the side of the currently active one.
+					 */
+					viewColumn: undefined,
+
+					/**
+					 * An optional flag that when `true` will stop the [editor](#TextEditor) from taking focus.
+					 */
+					preserveFocus: false,
+
+					/**
+					 * An optional flag that controls if an [editor](#TextEditor)-tab will be replaced
+					 * with the next editor or if it will be kept.
+					 */
+					preview: false,
+
+					/**
+					 * An optional selection to apply for the document in the [editor](#TextEditor).
+					 */
+					selection: range
+				};
+				vscode.window.showTextDocument(textDocument.uri, options);
 			});
 		})
 	}
@@ -89,7 +131,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 	// create a decorator type that we use to decorate small numbers
 	const smallNumberDecorationType = vscode.window.createTextEditorDecorationType({
-		borderWidth: '1px',
+		borderWidth: '0.1px',
 		borderStyle: 'solid',
 		overviewRulerColor: 'blue',
 		overviewRulerLane: vscode.OverviewRulerLane.Right,
