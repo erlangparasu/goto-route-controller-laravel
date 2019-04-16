@@ -22,14 +22,15 @@
 			},
 			{
 				"command": "extension.openPhpClassFile",
-				"title": "Open PHP Class"
+				"title": "Go to PHP Class"
 			}
 		],
 		"menus": {
 			"editor/context": [
 				{
 					"command": "extension.openPhpClassFile",
-					"when": "editorTextFocus"
+					"when": "editorTextFocus",
+					"group": "navigation"
 				}
 			]
 		}

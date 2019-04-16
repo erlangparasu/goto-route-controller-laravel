@@ -41,7 +41,7 @@ export function activate(context: vscode.ExtensionContext) {
 			const startPos = activeEditor.document.positionAt(match.index);
 			const endPos = activeEditor.document.positionAt(match.index + match[0].length);
 
-			const decoration = { range: new vscode.Range(startPos, endPos), hoverMessage: 'Number **' + match[0] + '**' };
+			const decoration = { range: new vscode.Range(startPos, endPos), hoverMessage: 'File **' + match[0] + '**' };
 			// if (match[0].length < 3) {
 			// smallNumbers.push(decoration);
 			// } else {
@@ -152,7 +152,8 @@ export function activate(context: vscode.ExtensionContext) {
 		while (match = regEx.exec(text)) {
 			const startPos = activeEditor.document.positionAt(match.index);
 			const endPos = activeEditor.document.positionAt(match.index + match[0].length);
-			const decoration = { range: new vscode.Range(startPos, endPos), hoverMessage: 'Number **' + match[0] + '**' };
+			const decoration = { range: new vscode.Range(startPos, endPos), hoverMessage: 'File **' + match[0] + '**' };
+
 			// if (match[0].length < 3) {
 			smallNumbers.push(decoration);
 			// } else {
@@ -172,19 +173,19 @@ export function activate(context: vscode.ExtensionContext) {
 	}
 
 	if (activeEditor) {
-		triggerUpdateDecorations();
+		// triggerUpdateDecorations();
 	}
 
 	vscode.window.onDidChangeActiveTextEditor(editor => {
 		activeEditor = editor;
 		if (editor) {
-			triggerUpdateDecorations();
+			// triggerUpdateDecorations();
 		}
 	}, null, context.subscriptions);
 
 	vscode.workspace.onDidChangeTextDocument(event => {
 		if (activeEditor && event.document === activeEditor.document) {
-			triggerUpdateDecorations();
+			// triggerUpdateDecorations();
 		}
 	}, null, context.subscriptions);
 
