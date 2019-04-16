@@ -92,15 +92,7 @@ export function activate(context: vscode.ExtensionContext) {
 						return;
 					}
 
-					// 2. Find Method Name
-					let methodPosition: number = docText.indexOf(' function ' + strPhpMethodName + '(');
-					// vscode.window.showInformationMessage(JSON.stringify(methodPosition));
-					if (methodPosition == -1) {
-						// Not Found
-						return;
-					}
-
-					// 3. Find Namespace
+					// 2. Find Namespace
 					let strNamespacePrefix = '';
 					let namespacePosition: number = docText.indexOf('namespace App\\Http\\Controllers' + strNamespacePrefix);
 					if (namespacePosition == -1) {
@@ -108,9 +100,17 @@ export function activate(context: vscode.ExtensionContext) {
 						return;
 					}
 
-					// 4. Find Class Name
+					// 3. Find Class Name
 					let classNamePosition: number = docText.indexOf('class ' + strFilenamePrefix + ' ');
 					if (classNamePosition == -1) {
+						// Not Found
+						return;
+					}
+
+					// 4. Find Method Name
+					let methodPosition: number = docText.indexOf(' function ' + strPhpMethodName + '(');
+					// vscode.window.showInformationMessage(JSON.stringify(methodPosition));
+					if (methodPosition == -1) {
 						// Not Found
 						return;
 					}
