@@ -1,6 +1,6 @@
 # Laravel Route Class Opener README
 
-This is the README for your extension "Laravel Route Class Opener". After writing up a brief description, we recommend including the following sections.
+This is the README for "Laravel Route Class Opener" extension. After writing up a brief description, we recommend including the following sections.
 
 ## Features
 
