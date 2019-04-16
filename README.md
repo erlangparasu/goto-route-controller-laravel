@@ -1,6 +1,6 @@
-# hello README
+# Laravel Route Class Opener README
 
-This is the README for your extension "hello". After writing up a brief description, we recommend including the following sections.
+This is the README for your extension "Laravel Route Class Opener". After writing up a brief description, we recommend including the following sections.
 
 ## Features
 
