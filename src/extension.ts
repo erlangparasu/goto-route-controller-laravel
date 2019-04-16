@@ -56,7 +56,7 @@ export function activate(context: vscode.ExtensionContext) {
 	});
 
 	function parsePhpClassAndMethod(str: string) {
-		let strFiltered = str.replace(',', '');
+		let strFiltered = str.replace(/[,]/g, '');
 		strFiltered = strFiltered.trim();
 		strFiltered = strFiltered.replace(/[\']/g, '');
 		strFiltered = strFiltered.replace(/["]/g, '');
@@ -76,30 +76,48 @@ export function activate(context: vscode.ExtensionContext) {
 
 		let files = vscode.workspace.findFiles('**/' + strFilenamePrefix + '.php');
 		files.then((uris: vscode.Uri[]) => {
-			let filePath = uris[0].toString();
-			// vscode.window.showInformationMessage(JSON.stringify(filePath));
+			uris.forEach((uri, i, uriss) => {
+				let filePath = uri.toString();
+				// vscode.window.showInformationMessage(JSON.stringify(filePath));
 
-			vscode.workspace.openTextDocument(uris[0]).then((textDocument: vscode.TextDocument) => {
-				// let selection = null;
+				vscode.workspace.openTextDocument(uri).then((textDocument: vscode.TextDocument) => {
+					// let selection = null;
+					let docText = textDocument.getText();
 
-				let docText = textDocument.getText();
-				let methodPosition: number = docText.indexOf('function ' + strPhpMethodName + '(');
-				// vscode.window.showInformationMessage(JSON.stringify(methodPosition));
+					// 1. Is PHP File?
+					if (docText.indexOf('<?php') == 0) {
+						// OK
+					} else {
+						// Not PHP File
+						return;
+					}
 
-				let posStart = textDocument.positionAt('function '.length + methodPosition + '('.length);
-				let posEnd = textDocument.positionAt('function '.length + methodPosition + '('.length);
-				let range = new vscode.Range(
-					posStart,
-					posEnd
-				);
+					// 2. Find Method Name
+					let methodPosition: number = docText.indexOf('function ' + strPhpMethodName + '(');
+					// vscode.window.showInformationMessage(JSON.stringify(methodPosition));
+					if (methodPosition == -1) {
+						// Not Found
+						return;
+					}
 
-				let options: vscode.TextDocumentShowOptions = {
-					viewColumn: undefined,
-					preserveFocus: false,
-					preview: false,
-					selection: range,
-				};
-				vscode.window.showTextDocument(textDocument.uri, options);
+					// 3. Find Namespace
+					// TODO: ?
+
+					let posStart = textDocument.positionAt('function '.length + methodPosition + '('.length);
+					let posEnd = textDocument.positionAt('function '.length + methodPosition + '('.length);
+					let range = new vscode.Range(
+						posStart,
+						posEnd
+					);
+
+					let options: vscode.TextDocumentShowOptions = {
+						viewColumn: undefined,
+						preserveFocus: false,
+						preview: true,
+						selection: range,
+					};
+					vscode.window.showTextDocument(textDocument.uri, options);
+				});
 			});
 		})
 	}
