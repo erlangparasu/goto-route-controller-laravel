@@ -101,10 +101,16 @@ export function activate(context: vscode.ExtensionContext) {
 					}
 
 					// 3. Find Namespace
-					// TODO: ?
+					let strNamespacePrefix = '';
+					let namespacePosition: number = docText.indexOf('namespace App\\Http\\Controllers' + strNamespacePrefix);
+					if (namespacePosition == -1) {
+						// Not Found
+						return;
+					}
+					vscode.window.showInformationMessage(strPhpNamespace);
 
-					let posStart = textDocument.positionAt('function '.length + methodPosition + '('.length);
-					let posEnd = textDocument.positionAt('function '.length + methodPosition + '('.length);
+					let posStart = textDocument.positionAt(methodPosition + 'function '.length);
+					let posEnd = textDocument.positionAt('function '.length + methodPosition + strPhpMethodName.length);
 					let range = new vscode.Range(
 						posStart,
 						posEnd
