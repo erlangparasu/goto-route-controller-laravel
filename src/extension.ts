@@ -66,7 +66,11 @@ export function activate(context: vscode.ExtensionContext) {
 		// vscode.window.showInformationMessage(strPhpNamespace);
 		// vscode.window.showInformationMessage(strPhpMethodName);
 
-		//
+		let arrStrPhpNamespace = strPhpNamespace.split('\\');
+		let strFilenamePrefix = arrStrPhpNamespace[arrStrPhpNamespace.length - 1];
+		vscode.window.showInformationMessage(strFilenamePrefix);
+
+		// let files = vscode.workspace.findFiles('**/*.php', '**/app/**', 10);
 	}
 
 	// ------------------------------------------------------------------------
