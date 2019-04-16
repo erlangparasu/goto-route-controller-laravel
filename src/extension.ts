@@ -24,14 +24,15 @@ export function activate(context: vscode.ExtensionContext) {
 		vscode.window.showInformationMessage('Laravel Route Class Opener enabled!');
 	});
 
+	// const regEx = /([,])(.?)(['])(.+)([a-zA-Z]{1,})([@])([a-zA-Z]{1,})(['])/g;
+	const regEx: RegExp = /'([a-zA-Z\\]+)\w+Controller(@\w+)?'/g;
+
 	let diss = vscode.commands.registerTextEditorCommand('extension.openPhpClassFile', (textEditor: vscode.TextEditor, edit: vscode.TextEditorEdit, args: any[]) => {
 		let textLine: vscode.TextLine = textEditor.document.lineAt(textEditor.selection.start);
 		let str: string = textEditor.document.getText(textEditor.selection);
 		// vscode.window.showInformationMessage(textLine.text);
 
 		let activeEditor: vscode.TextEditor = textEditor;
-		// const regEx = /([,])(.?)(['])(.+)([a-zA-Z]{1,})([@])([a-zA-Z]{1,})(['])/g;
-		const regEx: RegExp = /'([a-zA-Z\\]+)\w+@\w+'/g;
 		// const text = activeEditor.document.getText();
 		const text: string = textLine.text;
 		const smallNumbers: vscode.DecorationOptions[] = [];
@@ -157,7 +158,7 @@ export function activate(context: vscode.ExtensionContext) {
 		},
 		dark: {
 			// This color will be used in dark color themes
-			borderColor: 'rgba(255, 255, 255, 0.1)',
+			borderColor: 'rgba(255, 255, 255, 0.5)',
 			borderRadius: '8px'
 			// cursor: 'pointer'
 		}
@@ -176,8 +177,6 @@ export function activate(context: vscode.ExtensionContext) {
 		if (!activeEditor) {
 			return;
 		}
-		// const regEx = /([,])(.?)(['])(.+)([a-zA-Z]{1,})([@])([a-zA-Z]{1,})(['])/g;
-		const regEx: RegExp = /'([a-zA-Z\\]+)\w+@\w+'/g;
 		const text: string = activeEditor.document.getText();
 		const smallNumbers: vscode.DecorationOptions[] = [];
 		const largeNumbers: vscode.DecorationOptions[] = [];
@@ -205,19 +204,19 @@ export function activate(context: vscode.ExtensionContext) {
 	}
 
 	if (activeEditor) {
-		// triggerUpdateDecorations();
+		triggerUpdateDecorations();
 	}
 
 	vscode.window.onDidChangeActiveTextEditor(editor => {
 		activeEditor = editor;
 		if (editor) {
-			// triggerUpdateDecorations();
+			triggerUpdateDecorations();
 		}
 	}, null, context.subscriptions);
 
 	vscode.workspace.onDidChangeTextDocument(event => {
 		if (activeEditor && event.document === activeEditor.document) {
-			// triggerUpdateDecorations();
+			triggerUpdateDecorations();
 		}
 	}, null, context.subscriptions);
 
