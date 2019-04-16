@@ -70,7 +70,15 @@ export function activate(context: vscode.ExtensionContext) {
 		let strFilenamePrefix = arrStrPhpNamespace[arrStrPhpNamespace.length - 1];
 		vscode.window.showInformationMessage(strFilenamePrefix);
 
-		// let files = vscode.workspace.findFiles('**/*.php', '**/app/**', 10);
+		let files = vscode.workspace.findFiles('**/' + strFilenamePrefix + '.php');
+		files.then((uris: vscode.Uri[]) => {
+			let filePath = uris[0].toString();
+			vscode.window.showInformationMessage(JSON.stringify(filePath));
+
+			vscode.workspace.openTextDocument(uris[0]).then((textDocument: vscode.TextDocument) => {
+				vscode.window.showTextDocument(textDocument);
+			});
+		})
 	}
 
 	// ------------------------------------------------------------------------

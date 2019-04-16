@@ -17,7 +17,7 @@
 		"commands": [
 			{
 				"command": "extension.helloWorld",
-				"title": "Hello World"
+				"title": "Enable Hello World"
 			},
 			{
 				"command": "extension.findFilee",
