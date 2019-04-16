@@ -25,21 +25,22 @@ export function activate(context: vscode.ExtensionContext) {
 	});
 
 	let diss = vscode.commands.registerTextEditorCommand('extension.openPhpClassFile', (textEditor: vscode.TextEditor, edit: vscode.TextEditorEdit, args: any[]) => {
-		let textLine = textEditor.document.lineAt(textEditor.selection.start);
-		let str = textEditor.document.getText(textEditor.selection);
+		let textLine: vscode.TextLine = textEditor.document.lineAt(textEditor.selection.start);
+		let str: string = textEditor.document.getText(textEditor.selection);
 		// vscode.window.showInformationMessage(textLine.text);
 
-		let activeEditor = textEditor;
+		let activeEditor: vscode.TextEditor = textEditor;
 		// const regEx = /([,])(.?)(['])(.+)([a-zA-Z]{1,})([@])([a-zA-Z]{1,})(['])/g;
-		const regEx = /'([a-zA-Z\\]+)\w+@\w+'/g;
+		const regEx: RegExp = /'([a-zA-Z\\]+)\w+@\w+'/g;
 		// const text = activeEditor.document.getText();
-		const text = textLine.text;
+		const text: string = textLine.text;
 		const smallNumbers: vscode.DecorationOptions[] = [];
 		const largeNumbers: vscode.DecorationOptions[] = [];
+
 		let match;
 		while (match = regEx.exec(text)) {
-			const startPos = activeEditor.document.positionAt(match.index);
-			const endPos = activeEditor.document.positionAt(match.index + match[0].length);
+			const startPos: vscode.Position = activeEditor.document.positionAt(match.index);
+			const endPos: vscode.Position = activeEditor.document.positionAt(match.index + match[0].length);
 
 			const decoration = { range: new vscode.Range(startPos, endPos), hoverMessage: 'File **' + match[0] + '**' };
 			// if (match[0].length < 3) {
@@ -48,7 +49,7 @@ export function activate(context: vscode.ExtensionContext) {
 			// largeNumbers.push(decoration);
 			// }
 
-			let strResultMatch = match[0];
+			let strResultMatch: string = match[0];
 			// vscode.window.showInformationMessage(strResultMatch);
 
 			parsePhpClassAndMethod(strResultMatch);
@@ -56,33 +57,33 @@ export function activate(context: vscode.ExtensionContext) {
 	});
 
 	function parsePhpClassAndMethod(str: string) {
-		let strFiltered = str.replace(/[,]/g, '');
+		let strFiltered: string = str.replace(/[,]/g, '');
 		strFiltered = strFiltered.trim();
 		strFiltered = strFiltered.replace(/[\']/g, '');
 		strFiltered = strFiltered.replace(/["]/g, '');
 
 		// vscode.window.showInformationMessage(strFiltered);
 
-		let arrStr = strFiltered.split('@');
-		let strPhpNamespace = arrStr[0];
-		let strPhpMethodName = arrStr[1];
+		let arrStr: string[] = strFiltered.split('@');
+		let strPhpNamespace: string = arrStr[0];
+		let strPhpMethodName: string = arrStr[1];
 
 		// vscode.window.showInformationMessage(strPhpNamespace);
 		// vscode.window.showInformationMessage('Going to method: ' + strPhpMethodName + '()');
 
-		let arrStrPhpNamespace = strPhpNamespace.split('\\');
-		let strFilenamePrefix = arrStrPhpNamespace[arrStrPhpNamespace.length - 1];
+		let arrStrPhpNamespace: string[] = strPhpNamespace.split('\\');
+		let strFilenamePrefix: string = arrStrPhpNamespace[arrStrPhpNamespace.length - 1];
 		// vscode.window.showInformationMessage(strFilenamePrefix);
 
-		let files = vscode.workspace.findFiles('**/' + strFilenamePrefix + '.php');
+		let files: Thenable<vscode.Uri[]> = vscode.workspace.findFiles('**/' + strFilenamePrefix + '.php');
 		files.then((uris: vscode.Uri[]) => {
-			uris.forEach((uri, i, uriss) => {
-				let filePath = uri.toString();
+			uris.forEach((uri, i: number, uriss) => {
+				let filePath: string = uri.toString();
 				// vscode.window.showInformationMessage(JSON.stringify(filePath));
 
 				vscode.workspace.openTextDocument(uri).then((textDocument: vscode.TextDocument) => {
 					// let selection = null;
-					let docText = textDocument.getText();
+					let docText: string = textDocument.getText();
 
 					// 1. Is PHP File?
 					if (docText.indexOf('<?php') == 0) {
@@ -93,7 +94,7 @@ export function activate(context: vscode.ExtensionContext) {
 					}
 
 					// 2. Find Namespace
-					let strNamespacePrefix = '';
+					let strNamespacePrefix: string = '';
 					let namespacePosition: number = docText.indexOf('namespace App\\Http\\Controllers' + strNamespacePrefix);
 					if (namespacePosition == -1) {
 						// Not Found
@@ -117,9 +118,9 @@ export function activate(context: vscode.ExtensionContext) {
 
 					vscode.window.showInformationMessage(strPhpNamespace);
 
-					let posStart = textDocument.positionAt(methodPosition + ' function '.length);
-					let posEnd = textDocument.positionAt(' function '.length + methodPosition + strPhpMethodName.length);
-					let range = new vscode.Range(
+					let posStart: vscode.Position = textDocument.positionAt(methodPosition + ' function '.length);
+					let posEnd: vscode.Position = textDocument.positionAt(' function '.length + methodPosition + strPhpMethodName.length);
+					let range: vscode.Range = new vscode.Range(
 						posStart,
 						posEnd
 					);
@@ -146,18 +147,18 @@ export function activate(context: vscode.ExtensionContext) {
 	const smallNumberDecorationType = vscode.window.createTextEditorDecorationType({
 		borderWidth: '1px',
 		borderStyle: 'solid',
-		overviewRulerColor: 'blue',
+		// overviewRulerColor: 'blue',
 		overviewRulerLane: vscode.OverviewRulerLane.Right,
 		light: {
 			// This color will be used in light color themes
 			borderColor: 'darkblue',
-			borderRadius: '2px'
+			borderRadius: '8px'
 			// cursor: 'pointer'
 		},
 		dark: {
 			// This color will be used in dark color themes
-			borderColor: 'lightblue',
-			borderRadius: '2px'
+			borderColor: 'rgba(255, 255, 255, 0.1)',
+			borderRadius: '8px'
 			// cursor: 'pointer'
 		}
 	});
@@ -176,16 +177,15 @@ export function activate(context: vscode.ExtensionContext) {
 			return;
 		}
 		// const regEx = /([,])(.?)(['])(.+)([a-zA-Z]{1,})([@])([a-zA-Z]{1,})(['])/g;
-		const regEx = /'([a-zA-Z\\]+)\w+@\w+'/g;
-		const text = activeEditor.document.getText();
+		const regEx: RegExp = /'([a-zA-Z\\]+)\w+@\w+'/g;
+		const text: string = activeEditor.document.getText();
 		const smallNumbers: vscode.DecorationOptions[] = [];
 		const largeNumbers: vscode.DecorationOptions[] = [];
 		let match;
 		while (match = regEx.exec(text)) {
-			const startPos = activeEditor.document.positionAt(match.index);
-			const endPos = activeEditor.document.positionAt(match.index + match[0].length);
+			const startPos: vscode.Position = activeEditor.document.positionAt(match.index);
+			const endPos: vscode.Position = activeEditor.document.positionAt(match.index + match[0].length);
 			const decoration = { range: new vscode.Range(startPos, endPos), hoverMessage: 'File **' + match[0] + '**' };
-
 			// if (match[0].length < 3) {
 			smallNumbers.push(decoration);
 			// } else {
