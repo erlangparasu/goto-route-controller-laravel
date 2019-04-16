@@ -221,19 +221,19 @@ export function activate(context: vscode.ExtensionContext) {
 	}
 
 	if (activeEditor) {
-		triggerUpdateDecorations();
+		// triggerUpdateDecorations();
 	}
 
 	vscode.window.onDidChangeActiveTextEditor(editor => {
 		activeEditor = editor;
 		if (editor) {
-			triggerUpdateDecorations();
+			// triggerUpdateDecorations();
 		}
 	}, null, context.subscriptions);
 
 	vscode.workspace.onDidChangeTextDocument(event => {
 		if (activeEditor && event.document === activeEditor.document) {
-			triggerUpdateDecorations();
+			// triggerUpdateDecorations();
 		}
 	}, null, context.subscriptions);
 
