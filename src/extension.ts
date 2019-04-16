@@ -57,7 +57,16 @@ export function activate(context: vscode.ExtensionContext) {
 		strFiltered = strFiltered.replace(/[\']/g, '');
 		strFiltered = strFiltered.replace(/["]/g, '');
 
-		vscode.window.showInformationMessage(strFiltered);
+		// vscode.window.showInformationMessage(strFiltered);
+
+		let arrStr = strFiltered.split('@');
+		let strPhpNamespace = arrStr[0];
+		let strPhpMethodName = arrStr[1];
+
+		// vscode.window.showInformationMessage(strPhpNamespace);
+		// vscode.window.showInformationMessage(strPhpMethodName);
+
+		//
 	}
 
 	// ------------------------------------------------------------------------
