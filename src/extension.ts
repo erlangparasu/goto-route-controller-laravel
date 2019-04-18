@@ -73,15 +73,15 @@ export function activate(context: vscode.ExtensionContext) {
 		} else {
 			// Controller with Method Name
 			let arrStr: string[] = strFiltered.split('@');
-			strPhpNamespace = arrStr[0];
+			strPhpNamespace = arrStr[0]; // Api\Some\Other\OneController
 			strPhpMethodName = arrStr[1];
 		}
 
 		// vscode.window.showInformationMessage(strPhpNamespace);
 		// vscode.window.showInformationMessage('Going to method: ' + strPhpMethodName + '()');
 
-		let arrStrPhpNamespace: string[] = strPhpNamespace.split('\\');
-		let strFilenamePrefix: string = arrStrPhpNamespace[arrStrPhpNamespace.length - 1];
+		let arrStrPhpNamespace: string[] = strPhpNamespace.split('\\'); // [Api,Some,Other,OneController] or [OneController]
+		let strFilenamePrefix: string = arrStrPhpNamespace[arrStrPhpNamespace.length - 1]; // OneController
 		// vscode.window.showInformationMessage(strFilenamePrefix);
 
 		let files: Thenable<vscode.Uri[]> = vscode.workspace.findFiles('**/' + strFilenamePrefix + '.php');
@@ -110,14 +110,29 @@ export function activate(context: vscode.ExtensionContext) {
 						return;
 					}
 
-					// 3. Find Class Name
+					// 3. Find Exact Namespace;
+					// Note: In php file will look like: "namespace App\Http\Controllers\Api\Some\Other;"
+					let arrNamespaceWithoutClassName = arrStrPhpNamespace.slice(0, -1); // [Api,Some,Other]
+					let strExtraSeparator: string = '\\';
+					if (arrStrPhpNamespace.length == 1) {
+						strExtraSeparator = ''; // If only classname available
+					}
+					let strFullNamespace = 'namespace App\\Http\\Controllers' + strExtraSeparator + arrNamespaceWithoutClassName.join('\\') + ';';
+					// vscode.window.showInformationMessage(strFullNamespace);
+					let exactNamespacePosition: number = docText.indexOf(strFullNamespace);
+					if (exactNamespacePosition == -1) {
+						// Not Found
+						return;
+					}
+
+					// 4. Find Class Name
 					let classNamePosition: number = docText.indexOf('class ' + strFilenamePrefix + ' ');
 					if (classNamePosition == -1) {
 						// Not Found
 						return;
 					}
 
-					// 4. Find Method Name
+					// 5. Find Method Name
 					// To highlight the class name (Default)
 					let posStart: vscode.Position = textDocument.positionAt(classNamePosition + 'class '.length);
 					let posEnd: vscode.Position = textDocument.positionAt('class '.length + classNamePosition + strPhpMethodName.length);
@@ -135,7 +150,7 @@ export function activate(context: vscode.ExtensionContext) {
 						}
 					}
 
-					vscode.window.showInformationMessage(strPhpNamespace);
+					// vscode.window.showInformationMessage(strPhpNamespace);
 
 					let selectionRange: vscode.Range = new vscode.Range(
 						posStart,
