@@ -2,7 +2,7 @@
 	"name": "laravel-route-class-opener",
 	"displayName": "Laravel Route Class Opener",
 	"description": "Laravel Route Class Opener",
-	"version": "1.0.2",
+	"version": "2.0.0",
 	"engines": {
 		"vscode": "^1.33.0"
 	},
