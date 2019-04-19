@@ -22,11 +22,11 @@
 			},
 			{
 				"command": "extension.openPhpClassFile",
-				"title": "Go to Controller"
+				"title": "Laravel: Go to Controller"
 			},
 			{
 				"command": "extension.openRoutesDeclarationFile",
-				"title": "Go to Route"
+				"title": "Laravel: Go to Route"
 			}
 		],
 		"menus": {

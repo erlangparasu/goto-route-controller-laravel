@@ -79,31 +79,13 @@ export function activate(context: vscode.ExtensionContext) {
 	let disposableB = vscode.commands.registerTextEditorCommand('extension.openRoutesDeclarationFile', (textEditor: vscode.TextEditor, edit: vscode.TextEditorEdit, args: any[]) => {
 		let textLine: vscode.TextLine = textEditor.document.lineAt(textEditor.selection.start);
 		// let str: string = textEditor.document.getText(textEditor.selection);
-		vscode.window.showInformationMessage(textLine.text);
+		// vscode.window.showInformationMessage(textLine.text);
 
 		let activeEditor: vscode.TextEditor = textEditor;
 		// const text = activeEditor.document.getText();
 		const text: string = textLine.text;
 		const smallNumbers: vscode.DecorationOptions[] = [];
 		const largeNumbers: vscode.DecorationOptions[] = [];
-
-		// let match;
-		// while (match = regEx.exec(text)) {
-		// 	const startPos: vscode.Position = activeEditor.document.positionAt(match.index);
-		// 	const endPos: vscode.Position = activeEditor.document.positionAt(match.index + match[0].length);
-
-		// 	const decoration = { range: new vscode.Range(startPos, endPos), hoverMessage: 'File **' + match[0] + '**' };
-		// 	// if (match[0].length < 3) {
-		// 	// smallNumbers.push(decoration);
-		// 	// } else {
-		// 	// largeNumbers.push(decoration);
-		// 	// }
-
-		// 	let strResultMatch: string = match[0];
-		// 	// vscode.window.showInformationMessage(strResultMatch);
-
-		// 	parsePhpClassAndMethod(strResultMatch);
-		// }
 
 		// let selection = null;
 		let textDocument = textEditor.document;
@@ -146,7 +128,7 @@ export function activate(context: vscode.ExtensionContext) {
 		if (strNameSpaceShort.indexOf('\\') == 0) {
 			strNameSpaceShort = strNameSpaceShort.substr(1)
 		}
-		vscode.window.showInformationMessage(strNameSpaceShort);
+		// vscode.window.showInformationMessage(strNameSpaceShort);
 		let strClassName = parseClassName(textDocument) // Note: "BookController"
 
 		// Note: "Api\Home\BookController"
@@ -157,7 +139,73 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 
 		let parsedMethodName = parseMethodName(textLine);
-		vscode.window.showInformationMessage("strNamespaceWithClass:" + strNamespaceWithClass + "@" + parsedMethodName);
+		let strFullNamespaceWithClassWithMethod = strNamespaceWithClass + "@" + parsedMethodName;
+		vscode.window.showInformationMessage(strFullNamespaceWithClassWithMethod);
+
+
+		let filesWebRoute: Thenable<vscode.Uri[]> = vscode.workspace.findFiles('**/' + 'web.php');
+		filesWebRoute.then(handleEe)
+		let filesApiRoute: Thenable<vscode.Uri[]> = vscode.workspace.findFiles('**/' + 'api.php');
+		filesApiRoute.then(handleEe)
+
+		function handleEe(uris: vscode.Uri[]) {
+			if (uris.length == 1) {
+				// OK
+			} else {
+				return;
+			}
+
+			uris.forEach((uri, i: number, uriss) => {
+				let filePath: string = uri.toString();
+				// vscode.window.showInformationMessage(JSON.stringify(filePath));
+				vscode.workspace.openTextDocument(uri).then((textDocument: vscode.TextDocument) => {
+					// let selection = null;
+					let docText: string = textDocument.getText();
+
+					// 1. Is PHP File?
+					if (docText.indexOf('<?php') == 0) {
+						// OK
+					} else {
+						// Not PHP File
+						return;
+					}
+
+					// 2. Try to find text: example: "Api\Home\BookController@index"
+					let fullStartPosition: number = docText.indexOf("'" + strFullNamespaceWithClassWithMethod + "'")
+					if (fullStartPosition == -1) {
+						// Not found
+						return;
+					}
+
+					// 2. Try to find end position of method name (single qoute)
+					let fullEndPosition: number = fullStartPosition + ("'" + strFullNamespaceWithClassWithMethod + "'").length
+					if (fullEndPosition == -1) {
+						// Not found
+						return;
+					}
+
+					let positionStart: vscode.Position = textDocument.positionAt(fullStartPosition)
+					// let line: vscode.TextLine = textDocument.lineAt(positionStart.line)
+					let positionEnd: vscode.Position = textDocument.positionAt(fullEndPosition)
+
+					// Note: "Api\Home\BookController@index"
+					let ee = textDocument.getText(
+						new vscode.Range(
+							positionStart, positionEnd
+						)
+					)
+					// console.log("TCL: activate -> ee", ee)
+
+					let options: vscode.TextDocumentShowOptions = {
+						viewColumn: undefined,
+						preserveFocus: false,
+						preview: true,
+						selection: new vscode.Range(positionStart, positionEnd),
+					};
+					vscode.window.showTextDocument(textDocument.uri, options);
+				});
+			});
+		}
 
 		// // 3. Find Exact Namespace;
 		// // Note: In php file will look like: "namespace App\Http\Controllers\Api\Some\Other;"
