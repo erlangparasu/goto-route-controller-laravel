@@ -207,52 +207,6 @@ export function activate(context: vscode.ExtensionContext) {
 			});
 		}
 
-		// // 3. Find Exact Namespace;
-		// // Note: In php file will look like: "namespace App\Http\Controllers\Api\Some\Other;"
-		// let arrNamespaceWithoutClassName = arrStrPhpNamespace.slice(0, -1); // [Api,Some,Other]
-		// let strExtraSeparator: string = '\\';
-		// if (arrStrPhpNamespace.length == 1) {
-		// 	strExtraSeparator = ''; // If only classname available
-		// }
-		// let strFullNamespace = 'namespace App\\Http\\Controllers' + strExtraSeparator + arrNamespaceWithoutClassName.join('\\') + ';';
-		// // vscode.window.showInformationMessage(strFullNamespace);
-		// let exactNamespacePosition: number = docText.indexOf(strFullNamespace);
-		// if (exactNamespacePosition == -1) {
-		// 	// Not Found
-		// 	return;
-		// }
-
-		// // 4. Find Class Name
-		// let classNamePosition: number = docText.indexOf('class ' + strFilenamePrefix + ' ');
-		// if (classNamePosition == -1) {
-		// 	// Not Found
-		// 	return;
-		// }
-
-		// // 5. Find Method Name
-		// // To highlight the class name (Default)
-		// let posStart: vscode.Position = textDocument.positionAt(classNamePosition + 'class '.length);
-		// let posEnd: vscode.Position = textDocument.positionAt('class '.length + classNamePosition + strPhpMethodName.length);
-		// // To highlight the method name
-		// if (strPhpMethodName.length > 0) {
-		// 	let methodPosition: number = docText.indexOf(' function ' + strPhpMethodName + '(');
-		// 	// vscode.window.showInformationMessage(JSON.stringify(methodPosition));
-		// 	if (methodPosition == -1) {
-		// 		// Method name Not Found
-		// 		return;
-		// 	} else {
-		// 		// Method name Found
-		// 		posStart = textDocument.positionAt(methodPosition + ' function '.length);
-		// 		posEnd = textDocument.positionAt(' function '.length + methodPosition + strPhpMethodName.length);
-		// 	}
-		// }
-
-		// // vscode.window.showInformationMessage(strPhpNamespace);
-
-		// let selectionRange: vscode.Range = new vscode.Range(
-		// 	posStart,
-		// 	posEnd
-		// );
 	});
 
 	function parsePhpClassAndMethod(str: string) {
