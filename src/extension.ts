@@ -147,7 +147,17 @@ export function activate(context: vscode.ExtensionContext) {
 			strNameSpaceShort = strNameSpaceShort.substr(1)
 		}
 		vscode.window.showInformationMessage(strNameSpaceShort);
+		let strClassName = parseClassName(textDocument) // Note: "BookController"
 
+		// Note: "Api\Home\BookController"
+		let strNamespaceWithClass = strNameSpaceShort + '\\' + strClassName
+		// Remove backslash (for empty namespace)
+		if (strNamespaceWithClass.indexOf('\\') == 0) {
+			strNamespaceWithClass = strNamespaceWithClass.substr(1)
+		}
+
+		let parsedMethodName = '';
+		vscode.window.showInformationMessage("strNamespaceWithClass:" + strNamespaceWithClass + "@" + parsedMethodName);
 
 		// // 3. Find Exact Namespace;
 		// // Note: In php file will look like: "namespace App\Http\Controllers\Api\Some\Other;"
@@ -308,6 +318,26 @@ export function activate(context: vscode.ExtensionContext) {
 				});
 			});
 		})
+	}
+
+	function parseClassName(textDocument: vscode.TextDocument): string {
+		let strDocument = textDocument.getText();
+		const regEx: RegExp = /class \w+Controller /g;
+		let match;
+		while (match = regEx.exec(strDocument)) {
+			// Note: "class SomeThingController"
+			const startPos: vscode.Position = textDocument.positionAt(match.index);
+			const endPos: vscode.Position = textDocument.positionAt(match.index + match[0].length);
+			// const decoration = { range: new vscode.Range(startPos, endPos), hoverMessage: 'File **' + match[0] + '**' };
+
+			let strMatch = match[0];
+			strMatch = strMatch.replace('class', '')
+			strMatch = strMatch.trim()
+			// vscode.window.showInformationMessage(strMatch);
+			return strMatch;
+		}
+
+		return '';
 	}
 
 	// ------------------------------------------------------------------------
