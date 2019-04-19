@@ -2,7 +2,7 @@
 	"name": "laravel-route-class-opener",
 	"displayName": "Laravel Route Class Opener",
 	"description": "Laravel Route Class Opener",
-	"version": "1.0.1",
+	"version": "1.0.2",
 	"engines": {
 		"vscode": "^1.33.0"
 	},
@@ -22,13 +22,22 @@
 			},
 			{
 				"command": "extension.openPhpClassFile",
-				"title": "Go to PHP Class"
+				"title": "Go to Controller"
+			},
+			{
+				"command": "extension.openRoutesDeclarationFile",
+				"title": "Go to Route"
 			}
 		],
 		"menus": {
 			"editor/context": [
 				{
 					"command": "extension.openPhpClassFile",
+					"when": "editorTextFocus",
+					"group": "navigation"
+				},
+				{
+					"command": "extension.openRoutesDeclarationFile",
 					"when": "editorTextFocus",
 					"group": "navigation"
 				}

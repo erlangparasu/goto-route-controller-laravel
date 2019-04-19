@@ -17,7 +17,7 @@ export function activate(context: vscode.ExtensionContext) {
 	// The command has been defined in the package.json file
 	// Now provide the implementation of the command with registerCommand
 	// The commandId parameter must match the command field in package.json
-	let disposable = vscode.commands.registerCommand('enableLaravelRouteClassOpener', () => {
+	let disposableC = vscode.commands.registerCommand('enableLaravelRouteClassOpener', () => {
 		// The code you place here will be executed every time your command is executed
 
 		// Display a message box to the user
@@ -27,16 +27,35 @@ export function activate(context: vscode.ExtensionContext) {
 	// const regEx = /([,])(.?)(['])(.+)([a-zA-Z]{1,})([@])([a-zA-Z]{1,})(['])/g;
 	const regEx: RegExp = /'([a-zA-Z\\]+)\w+Controller(@\w+)?'/g;
 
-	let diss = vscode.commands.registerTextEditorCommand('extension.openPhpClassFile', (textEditor: vscode.TextEditor, edit: vscode.TextEditorEdit, args: any[]) => {
+	let disposableA = vscode.commands.registerTextEditorCommand('extension.openPhpClassFile', (textEditor: vscode.TextEditor, edit: vscode.TextEditorEdit, args: any[]) => {
 		let textLine: vscode.TextLine = textEditor.document.lineAt(textEditor.selection.start);
-		let str: string = textEditor.document.getText(textEditor.selection);
+		// let str: string = textEditor.document.getText(textEditor.selection);
 		// vscode.window.showInformationMessage(textLine.text);
+
+		let strUri = textEditor.document.uri.path;
+		if (strUri.indexOf('routes') == -1) {
+			// This file is not inside routes directory
+			vscode.window.showInformationMessage('This file is not inside routes directory');
+			return;
+		}
+		if ((strUri.indexOf('web.php') != -1) || (strUri.indexOf('api.php') != -1)) {
+			// OK
+		} else {
+			// This file is not web.php or api.php
+			vscode.window.showInformationMessage('This file is not web.php or api.php');
+			return;
+		}
+		if (textEditor.document.getText().indexOf('Route::') == -1) {
+			// No route declaration found in this file
+			vscode.window.showInformationMessage('No route declaration found in this file');
+			return;
+		}
 
 		let activeEditor: vscode.TextEditor = textEditor;
 		// const text = activeEditor.document.getText();
 		const text: string = textLine.text;
-		const smallNumbers: vscode.DecorationOptions[] = [];
-		const largeNumbers: vscode.DecorationOptions[] = [];
+		// const smallNumbers: vscode.DecorationOptions[] = [];
+		// const largeNumbers: vscode.DecorationOptions[] = [];
 
 		let match;
 		while (match = regEx.exec(text)) {
@@ -55,6 +74,127 @@ export function activate(context: vscode.ExtensionContext) {
 
 			parsePhpClassAndMethod(strResultMatch);
 		}
+	});
+
+	let disposableB = vscode.commands.registerTextEditorCommand('extension.openRoutesDeclarationFile', (textEditor: vscode.TextEditor, edit: vscode.TextEditorEdit, args: any[]) => {
+		let textLine: vscode.TextLine = textEditor.document.lineAt(textEditor.selection.start);
+		// let str: string = textEditor.document.getText(textEditor.selection);
+		vscode.window.showInformationMessage(textLine.text);
+
+		let activeEditor: vscode.TextEditor = textEditor;
+		// const text = activeEditor.document.getText();
+		const text: string = textLine.text;
+		const smallNumbers: vscode.DecorationOptions[] = [];
+		const largeNumbers: vscode.DecorationOptions[] = [];
+
+		// let match;
+		// while (match = regEx.exec(text)) {
+		// 	const startPos: vscode.Position = activeEditor.document.positionAt(match.index);
+		// 	const endPos: vscode.Position = activeEditor.document.positionAt(match.index + match[0].length);
+
+		// 	const decoration = { range: new vscode.Range(startPos, endPos), hoverMessage: 'File **' + match[0] + '**' };
+		// 	// if (match[0].length < 3) {
+		// 	// smallNumbers.push(decoration);
+		// 	// } else {
+		// 	// largeNumbers.push(decoration);
+		// 	// }
+
+		// 	let strResultMatch: string = match[0];
+		// 	// vscode.window.showInformationMessage(strResultMatch);
+
+		// 	parsePhpClassAndMethod(strResultMatch);
+		// }
+
+		// let selection = null;
+		let textDocument = textEditor.document;
+		let docText: string = textDocument.getText();
+
+		// 1. Is PHP File?
+		if (docText.indexOf('<?php') == 0) {
+			// OK
+		} else {
+			// Not PHP File
+			return;
+		}
+
+		// 2. Find Namespace
+		let strNamespacePrefix: string = '';
+		let namespacePosition: number = docText.indexOf('namespace App\\Http\\Controllers' + strNamespacePrefix);
+		// console.log("TCL: activate -> namespacePosition", namespacePosition)
+		if (namespacePosition == -1) {
+			// Not Found
+			return;
+		}
+
+		let positionNamespaceStart: vscode.Position = textDocument.positionAt(namespacePosition + 'namespace App\\Http\\Controllers'.length);
+		let lineNamespace: vscode.TextLine = textDocument.lineAt(positionNamespaceStart);
+		// console.log("TCL: activate -> lineNamespace", lineNamespace)
+
+		let namespaceCommaPosition = lineNamespace.text.indexOf(';') + namespacePosition;
+		// console.log("TCL: activate -> namespaceCommaPosition", namespaceCommaPosition)
+		let positionNamespaceEnd: vscode.Position = textDocument.positionAt(namespaceCommaPosition);
+
+		// Note: get string like: "\Api\Home"
+		let strNameSpaceShort: string = textDocument.getText(new vscode.Range(positionNamespaceStart, positionNamespaceEnd));
+		// vscode.window.showInformationMessage(strNameSpaceShort);
+
+		// console.log("TCL: activate -> positionNamespaceStart", positionNamespaceStart)
+		// console.log("TCL: activate -> positionNamespaceEnd", positionNamespaceEnd)
+		// console.log("TCL: activate -> strNameSpaceShort ###>", strNameSpaceShort, "<###")
+
+		// Note: get string like: "Api\Home"
+		if (strNameSpaceShort.indexOf('\\') == 0) {
+			strNameSpaceShort = strNameSpaceShort.substr(1)
+		}
+		vscode.window.showInformationMessage(strNameSpaceShort);
+
+
+		// // 3. Find Exact Namespace;
+		// // Note: In php file will look like: "namespace App\Http\Controllers\Api\Some\Other;"
+		// let arrNamespaceWithoutClassName = arrStrPhpNamespace.slice(0, -1); // [Api,Some,Other]
+		// let strExtraSeparator: string = '\\';
+		// if (arrStrPhpNamespace.length == 1) {
+		// 	strExtraSeparator = ''; // If only classname available
+		// }
+		// let strFullNamespace = 'namespace App\\Http\\Controllers' + strExtraSeparator + arrNamespaceWithoutClassName.join('\\') + ';';
+		// // vscode.window.showInformationMessage(strFullNamespace);
+		// let exactNamespacePosition: number = docText.indexOf(strFullNamespace);
+		// if (exactNamespacePosition == -1) {
+		// 	// Not Found
+		// 	return;
+		// }
+
+		// // 4. Find Class Name
+		// let classNamePosition: number = docText.indexOf('class ' + strFilenamePrefix + ' ');
+		// if (classNamePosition == -1) {
+		// 	// Not Found
+		// 	return;
+		// }
+
+		// // 5. Find Method Name
+		// // To highlight the class name (Default)
+		// let posStart: vscode.Position = textDocument.positionAt(classNamePosition + 'class '.length);
+		// let posEnd: vscode.Position = textDocument.positionAt('class '.length + classNamePosition + strPhpMethodName.length);
+		// // To highlight the method name
+		// if (strPhpMethodName.length > 0) {
+		// 	let methodPosition: number = docText.indexOf(' function ' + strPhpMethodName + '(');
+		// 	// vscode.window.showInformationMessage(JSON.stringify(methodPosition));
+		// 	if (methodPosition == -1) {
+		// 		// Method name Not Found
+		// 		return;
+		// 	} else {
+		// 		// Method name Found
+		// 		posStart = textDocument.positionAt(methodPosition + ' function '.length);
+		// 		posEnd = textDocument.positionAt(' function '.length + methodPosition + strPhpMethodName.length);
+		// 	}
+		// }
+
+		// // vscode.window.showInformationMessage(strPhpNamespace);
+
+		// let selectionRange: vscode.Range = new vscode.Range(
+		// 	posStart,
+		// 	posEnd
+		// );
 	});
 
 	function parsePhpClassAndMethod(str: string) {
@@ -252,8 +392,11 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	}, null, context.subscriptions);
 
-	context.subscriptions.push(diss);
-	context.subscriptions.push(disposable);
+	//
+
+	context.subscriptions.push(disposableA);
+	context.subscriptions.push(disposableB);
+	context.subscriptions.push(disposableC);
 }
 
 // This method is called when your extension is deactivated
