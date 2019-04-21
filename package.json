@@ -1,8 +1,8 @@
 {
-	"name": "laravel-route-class-opener",
-	"displayName": "Laravel Route Class Opener",
-	"description": "Laravel Route Class Opener",
-	"version": "2.0.0",
+	"name": "laravel-goto-controller-route",
+	"displayName": "laravel-goto-controller-route",
+	"description": "laravel-goto-controller-route",
+	"version": "2.0.1",
 	"engines": {
 		"vscode": "^1.33.0"
 	},
