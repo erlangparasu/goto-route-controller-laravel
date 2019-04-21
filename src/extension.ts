@@ -27,7 +27,7 @@ export function activate(context: vscode.ExtensionContext) {
 	// const regEx = /([,])(.?)(['])(.+)([a-zA-Z]{1,})([@])([a-zA-Z]{1,})(['])/g;
 	const regEx: RegExp = /'([a-zA-Z\\]+)\w+Controller(@\w+)?'/g;
 
-	let disposableA = vscode.commands.registerTextEditorCommand('extension.openPhpClassFile', (textEditor: vscode.TextEditor, edit: vscode.TextEditorEdit, args: any[]) => {
+	let disposableA = vscode.commands.registerTextEditorCommand('extension.openControllerClassFile', (textEditor: vscode.TextEditor, edit: vscode.TextEditorEdit, args: any[]) => {
 		let textLine: vscode.TextLine = textEditor.document.lineAt(textEditor.selection.start);
 		// let str: string = textEditor.document.getText(textEditor.selection);
 		// vscode.window.showInformationMessage(textLine.text);
