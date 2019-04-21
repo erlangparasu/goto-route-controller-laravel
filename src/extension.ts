@@ -12,17 +12,16 @@ export function activate(context: vscode.ExtensionContext) {
 
 	// Use the console to output diagnostic information (console.log) and errors (console.error)
 	// This line of code will only be executed once when your extension is activated
-	console.log('Congratulations, your extension "LaravelRouteClassOpener" is now active!');
+	console.log('Extension "laravel-goto-controller-route" is now active!');
 
 	// The command has been defined in the package.json file
 	// Now provide the implementation of the command with registerCommand
 	// The commandId parameter must match the command field in package.json
-	let disposableC = vscode.commands.registerCommand('enableLaravelRouteClassOpener', () => {
-		// The code you place here will be executed every time your command is executed
-
-		// Display a message box to the user
-		vscode.window.showInformationMessage('Laravel Route Class Opener enabled!');
-	});
+	// let disposableC = vscode.commands.registerCommand('enableLaravelRouteClassOpener', () => {
+	// 	// The code you place here will be executed every time your command is executed
+	// 	// Display a message box to the user
+	// 	vscode.window.showInformationMessage('laravel-goto-controller-route enabled!');
+	// });
 
 	// const regEx = /([,])(.?)(['])(.+)([a-zA-Z]{1,})([@])([a-zA-Z]{1,})(['])/g;
 	const regEx: RegExp = /'([a-zA-Z\\]+)\w+Controller(@\w+)?'/g;
@@ -140,7 +139,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 		let parsedMethodName = parseMethodName(textLine);
 		let strFullNamespaceWithClassWithMethod = strNamespaceWithClass + "@" + parsedMethodName;
-		vscode.window.showInformationMessage(strFullNamespaceWithClassWithMethod);
+		// vscode.window.showInformationMessage(strFullNamespaceWithClassWithMethod);
 
 
 		let filesWebRoute: Thenable<vscode.Uri[]> = vscode.workspace.findFiles('**/' + 'web.php');
@@ -210,10 +209,11 @@ export function activate(context: vscode.ExtensionContext) {
 	});
 
 	function parsePhpClassAndMethod(str: string) {
-		let strFiltered: string = str.replace(/[,]/g, '');
-		strFiltered = strFiltered.trim();
-		strFiltered = strFiltered.replace(/[\']/g, '');
-		strFiltered = strFiltered.replace(/["]/g, '');
+		let strFiltered: string = str.replace(/[,]/g, '')
+			.trim()
+			.replace(/[\']/g, '')
+			.replace(/["]/g, '')
+			.trim();
 
 		// vscode.window.showInformationMessage(strFiltered);
 
@@ -348,10 +348,10 @@ export function activate(context: vscode.ExtensionContext) {
 		let match;
 		while (match = regEx.exec(strDocument)) {
 			let strMatch = match[0]; // Note: " public function index("
-			strMatch = strMatch.replace('public', ' ')
-			strMatch = strMatch.replace('function', ' ')
-			strMatch = strMatch.replace('(', ' ')
-			strMatch = strMatch.trim()
+			strMatch = strMatch.replace('public', '')
+				.replace('function', '')
+				.replace('(', '')
+				.trim();
 
 			// Note: "index"
 			// vscode.window.showInformationMessage(strMatch);
@@ -447,7 +447,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(disposableA);
 	context.subscriptions.push(disposableB);
-	context.subscriptions.push(disposableC);
+	// context.subscriptions.push(disposableC);
 }
 
 // This method is called when your extension is deactivated
