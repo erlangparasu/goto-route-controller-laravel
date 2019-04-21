@@ -9,7 +9,7 @@
 	"categories": [
 		"Other"
 	],
-	"publisher": "ErlangParasu",
+	"publisher": "erlangparasu",
 	"activationEvents": [
 		"onLanguage:php"
 	],
