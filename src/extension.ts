@@ -137,7 +137,26 @@ export function activate(context: vscode.ExtensionContext) {
 			strNamespaceWithClass = strNamespaceWithClass.substr(1)
 		}
 
-		let parsedMethodName = parseMethodName(textLine);
+		// Find method name recursively upward until we found the method name
+		let parsedMethodName: string = '';
+		let tempPositionCursor: vscode.Position = textEditor.selection.start;
+		let dooLoop: boolean = true;
+		while (dooLoop) {
+			if (textLine.lineNumber == 1) {
+				dooLoop = false;
+				break;
+			} else {
+				parsedMethodName = parseMethodName(textLine).trim();
+				if (parsedMethodName.length == 0) {
+					tempPositionCursor = tempPositionCursor.translate(-1);
+					textLine = textEditor.document.lineAt(tempPositionCursor);
+				} else {
+					dooLoop = false;
+					break;
+				}
+			}
+		}
+
 		let strFullNamespaceWithClassWithMethod = strNamespaceWithClass + "@" + parsedMethodName;
 		// vscode.window.showInformationMessage(strFullNamespaceWithClassWithMethod);
 
