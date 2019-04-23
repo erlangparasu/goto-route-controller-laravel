@@ -73,7 +73,23 @@ export function activate(context: vscode.ExtensionContext) {
 			let strResultMatch: string = match[0];
 			// vscode.window.showInformationMessage(strResultMatch);
 
-			parsePhpClassAndMethod(strResultMatch);
+			let thenableProgress = vscode.window.withProgress({
+				location: vscode.ProgressLocation.Notification,
+				title: "Laravel: Finding controller declaration"
+			}, function (progress: vscode.Progress<{ message?: string; increment?: number }>, token: vscode.CancellationToken) {
+				return new Promise<string>(function (resolve: (value?: string) => void, reject: (reason?: any) => void) {
+					intervalId = setInterval(function () {
+						progress.report({ increment: 1, message: "..." });
+					}, 100);
+					parsePhpClassAndMethod(strResultMatch, resolve, reject, progress, token);
+				});
+			});
+
+			thenableProgress.then(function () {
+				console.log('progress onFulfilled');
+			}, function () {
+				console.log('progress onRejected');
+			});
 		}
 	});
 
@@ -113,8 +129,6 @@ export function activate(context: vscode.ExtensionContext) {
 		progress: vscode.Progress<{ message?: string; increment?: number }>,
 		token: vscode.CancellationToken
 	) {
-		progress.report({ increment: 5, message: "..." });
-
 		let textLine: vscode.TextLine = textEditor.document.lineAt(textEditor.selection.start);
 		// let str: string = textEditor.document.getText(textEditor.selection);
 		// vscode.window.showInformationMessage(textLine.text);
@@ -136,7 +150,6 @@ export function activate(context: vscode.ExtensionContext) {
 			// Not PHP File
 			return;
 		}
-		progress.report({ increment: 5, message: "..." });
 
 		// 2. Find Namespace
 		let strNamespacePrefix: string = '';
@@ -146,7 +159,6 @@ export function activate(context: vscode.ExtensionContext) {
 			// Not Found
 			return;
 		}
-		progress.report({ increment: 5, message: "..." });
 
 		let positionNamespaceStart: vscode.Position = textDocument.positionAt(namespacePosition + 'namespace App\\Http\\Controllers'.length);
 		let lineNamespace: vscode.TextLine = textDocument.lineAt(positionNamespaceStart);
@@ -163,7 +175,6 @@ export function activate(context: vscode.ExtensionContext) {
 		// console.log("TCL: activate -> positionNamespaceStart", positionNamespaceStart)
 		// console.log("TCL: activate -> positionNamespaceEnd", positionNamespaceEnd)
 		// console.log("TCL: activate -> strNameSpaceShort ###>", strNameSpaceShort, "<###")
-		progress.report({ increment: 5, message: "..." });
 
 		// Note: get string like: "Api\Home"
 		if (strNameSpaceShort.indexOf('\\') == 0) {
@@ -171,7 +182,6 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 		// vscode.window.showInformationMessage(strNameSpaceShort);
 		let strClassName = parseClassName(textDocument) // Note: "BookController"
-		progress.report({ increment: 5, message: "..." });
 
 		// Note: "Api\Home\BookController"
 		let strNamespaceWithClass = strNameSpaceShort + '\\' + strClassName
@@ -179,7 +189,6 @@ export function activate(context: vscode.ExtensionContext) {
 		if (strNamespaceWithClass.indexOf('\\') == 0) {
 			strNamespaceWithClass = strNamespaceWithClass.substr(1)
 		}
-		progress.report({ increment: 5, message: "..." });
 
 		// Find method name recursively upward until we found the method name
 		let parsedMethodName: string = '';
@@ -200,17 +209,15 @@ export function activate(context: vscode.ExtensionContext) {
 				}
 			}
 		}
-		progress.report({ increment: 5, message: "..." });
 
 		let strFullNamespaceWithClassWithMethod = strNamespaceWithClass + "@" + parsedMethodName;
 		// vscode.window.showInformationMessage(strFullNamespaceWithClassWithMethod);
 
 
 		let filesWebRoute: Thenable<vscode.Uri[]> = vscode.workspace.findFiles('**/' + 'web.php');
-		filesWebRoute.then(handleEe)
+		filesWebRoute.then(handleEe);
 		let filesApiRoute: Thenable<vscode.Uri[]> = vscode.workspace.findFiles('**/' + 'api.php');
-		filesApiRoute.then(handleEe)
-		progress.report({ increment: 5, message: "..." });
+		filesApiRoute.then(handleEe);
 
 		function handleEe(uris: vscode.Uri[]) {
 			if (uris.length == 1) {
@@ -280,7 +287,13 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	}
 
-	function parsePhpClassAndMethod(str: string) {
+	function parsePhpClassAndMethod(
+		str: string,
+		resolve: (value?: string) => void,
+		reject: (reason?: any) => void,
+		progress: vscode.Progress<{ message?: string; increment?: number }>,
+		token: vscode.CancellationToken
+	) {
 		let strFiltered: string = str.replace(/[,]/g, '')
 			.trim()
 			.replace(/[\']/g, '')
@@ -388,7 +401,14 @@ export function activate(context: vscode.ExtensionContext) {
 						selection: selectionRange,
 					};
 
-					vscode.window.showTextDocument(textDocument.uri, options);
+					setTimeout(function () {
+						progress.report({ increment: 50, message: "Done" });
+						console.log('console Done');
+
+						vscode.window.showTextDocument(textDocument.uri, options);
+
+						resolve('resolve Done');
+					}, 1000);
 				});
 			});
 		})
