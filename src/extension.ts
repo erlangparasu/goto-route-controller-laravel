@@ -40,6 +40,11 @@ export function activate(context: vscode.ExtensionContext) {
 		if (strUri.indexOf('routes') == -1) {
 			// This file is not inside routes directory
 			vscode.window.showInformationMessage('This file is not inside routes directory');
+			try {
+				mReject(new Error('NotInsideRoutesDirectory'));
+			} catch (e) {
+				// Do nothing.
+			}
 			return;
 		}
 		if ((strUri.indexOf('web.php') != -1) || (strUri.indexOf('api.php') != -1)) {
@@ -47,11 +52,21 @@ export function activate(context: vscode.ExtensionContext) {
 		} else {
 			// This file is not web.php or api.php
 			vscode.window.showInformationMessage('This file is not web.php or api.php');
+			try {
+				mReject(new Error('FileIsNotWebPhpOrApiPhp'));
+			} catch (e) {
+				// Do nothing.
+			}
 			return;
 		}
 		if (textEditor.document.getText().indexOf('Route::') == -1) {
 			// No route declaration found in this file
 			vscode.window.showInformationMessage('No route declaration found in this file');
+			try {
+				mReject(new Error('NoRouteDeclarationFound'));
+			} catch (e) {
+				// Do nothing.
+			}
 			return;
 		}
 
@@ -234,6 +249,7 @@ export function activate(context: vscode.ExtensionContext) {
 			handleEe(uris, strFullNamespaceWithClassWithMethod, resolve, reject, progress, token);
 		}, function () {
 			// Route declaration NOT found in web.php
+			console.log('Route declaration NOT found in web.php');
 
 			// Try finding in api.php
 			let filesApiRoute: Thenable<vscode.Uri[]> = vscode.workspace.findFiles('**/' + 'api.php');
@@ -241,7 +257,9 @@ export function activate(context: vscode.ExtensionContext) {
 				// Route declaration found in api.php
 				handleEe(uris, strFullNamespaceWithClassWithMethod, resolve, reject, progress, token);
 			}, function () {
-				// Route declaration NOT found in api.php too
+				// Route declaration NOT found in api.php
+				console.log('Route declaration NOT found in api.php');
+
 				reject(new Error('RouteDeclarationNotFound'));
 			});
 		});
@@ -421,6 +439,7 @@ export function activate(context: vscode.ExtensionContext) {
 						// vscode.window.showInformationMessage(JSON.stringify(methodPosition));
 						if (methodPosition == -1) {
 							// Method name Not Found
+							reject(new Error('MethodNameNotFound'));
 							return;
 						} else {
 							// Method name Found
