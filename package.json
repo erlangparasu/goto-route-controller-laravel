@@ -34,12 +34,12 @@
 				{
 					"command": "extension.openControllerClassFile",
 					"when": "editorTextFocus && editorLangId == php && resourceExtname == .php && resourceFilename =~ /(web|api)\\.php/",
-					"group": "navigation@1"
+					"group": "navigation"
 				},
 				{
 					"command": "extension.openRoutesDeclarationFile",
 					"when": "editorTextFocus && editorLangId == php && resourceExtname == .php && resourceFilename =~ /(Controller)\\.php/",
-					"group": "navigation@2"
+					"group": "navigation"
 				}
 			]
 		}
