@@ -109,9 +109,9 @@ export function activate(context: vscode.ExtensionContext) {
 				});
 			});
 
-			mThenableProgress.then(function (value) {
+			mThenableProgress.then((value: string) => {
 				console.log('progress onFulfilled', value);
-			}, function (reason) {
+			}, (reason: any) => {
 				console.log('progress onRejected', reason);
 			});
 		}
@@ -141,9 +141,9 @@ export function activate(context: vscode.ExtensionContext) {
 			}
 		);
 
-		mThenableProgress.then(function (value) {
+		mThenableProgress.then((value: string) => {
 			console.log('progress onFulfilled', value);
-		}, function (reason) {
+		}, (reason: any) => {
 			console.log('progress onRejected', reason);
 		});
 	});
@@ -243,25 +243,20 @@ export function activate(context: vscode.ExtensionContext) {
 		let strFullNamespaceWithClassWithMethod = strNamespaceWithClass + "@" + parsedMethodName;
 		// vscode.window.showInformationMessage(strFullNamespaceWithClassWithMethod);
 
+		// TODO: make chain search, web.php first, then api.php.
+
 		let filesWebRoute: Thenable<vscode.Uri[]> = vscode.workspace.findFiles('**/' + 'web.php');
-		filesWebRoute.then(function (uris: vscode.Uri[]) {
-			// Route declaration found in web.php
+		filesWebRoute.then((uris: vscode.Uri[]) => {
 			handleEe(uris, strFullNamespaceWithClassWithMethod, resolve, reject, progress, token);
-		}, function () {
-			// Route declaration NOT found in web.php
-			console.log('Route declaration NOT found in web.php');
+		}, (reason: any) => {
+			console.log('File web.php not found', reason);
+		});
 
-			// Try finding in api.php
-			let filesApiRoute: Thenable<vscode.Uri[]> = vscode.workspace.findFiles('**/' + 'api.php');
-			filesApiRoute.then(function (uris: vscode.Uri[]) {
-				// Route declaration found in api.php
-				handleEe(uris, strFullNamespaceWithClassWithMethod, resolve, reject, progress, token);
-			}, function () {
-				// Route declaration NOT found in api.php
-				console.log('Route declaration NOT found in api.php');
-
-				reject(new Error('RouteDeclarationNotFound'));
-			});
+		let filesApiRoute: Thenable<vscode.Uri[]> = vscode.workspace.findFiles('**/' + 'api.php');
+		filesApiRoute.then((uris: vscode.Uri[]) => {
+			handleEe(uris, strFullNamespaceWithClassWithMethod, resolve, reject, progress, token);
+		}, (reason: any) => {
+			console.log('File api.php not found', reason);
 		});
 	}
 
