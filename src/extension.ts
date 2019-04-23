@@ -82,7 +82,7 @@ export function activate(context: vscode.ExtensionContext) {
 	let disposableB = vscode.commands.registerTextEditorCommand('extension.openRoutesDeclarationFile', (textEditor: vscode.TextEditor, edit: vscode.TextEditorEdit, args: any[]) => {
 		let progressOptions = {
 			location: vscode.ProgressLocation.Notification,
-			title: "Finding route declaration"
+			title: "Laravel: Finding route declaration"
 		};
 
 		thenableProgress = vscode.window.withProgress(
