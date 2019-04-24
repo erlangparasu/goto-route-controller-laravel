@@ -99,8 +99,8 @@ export function activate(context: vscode.ExtensionContext) {
 			mThenableProgress = vscode.window.withProgress({
 				location: vscode.ProgressLocation.Notification,
 				title: "Laravel: Finding controller declaration"
-			}, function (progress: vscode.Progress<{ message?: string; increment?: number }>, token: vscode.CancellationToken) {
-				return new Promise<string>(function (resolve: (value?: string) => void, reject: (reason?: any) => void) {
+			}, (progress: vscode.Progress<{ message?: string; increment?: number }>, token: vscode.CancellationToken) => {
+				return new Promise<string>((resolve: (value?: string) => void, reject: (reason?: any) => void) => {
 					mResolve = resolve;
 					mReject = reject;
 
@@ -130,8 +130,8 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 		mThenableProgress = vscode.window.withProgress(
 			progressOptions,
-			function (progress: vscode.Progress<{ message?: string; increment?: number }>, token: vscode.CancellationToken) {
-				return new Promise<string>(function (resolve: (value?: string) => void, reject: (reason?: any) => void) {
+			(progress: vscode.Progress<{ message?: string; increment?: number }>, token: vscode.CancellationToken) => {
+				return new Promise<string>((resolve: (value?: string) => void, reject: (reason?: any) => void) => {
 					mResolve = resolve;
 					mReject = reject;
 
@@ -245,19 +245,31 @@ export function activate(context: vscode.ExtensionContext) {
 
 		// TODO: make chain search, web.php first, then api.php.
 
-		let filesWebRoute: Thenable<vscode.Uri[]> = vscode.workspace.findFiles('**/' + 'web.php');
-		filesWebRoute.then((uris: vscode.Uri[]) => {
-			handleEe(uris, strFullNamespaceWithClassWithMethod, resolve, reject, progress, token);
-		}, (reason: any) => {
-			console.log('File web.php not found', reason);
-		});
+		// let filesWebRoute: Thenable<vscode.Uri[]> = vscode.workspace.findFiles('**/' + 'web.php');
+		// filesWebRoute.then((uris: vscode.Uri[]) => {
+		// 	handleEe(uris, strFullNamespaceWithClassWithMethod, resolve, reject, progress, token);
+		// }, (reason: any) => {
+		// 	console.log('File web.php not found', reason);
+		// });
 
-		let filesApiRoute: Thenable<vscode.Uri[]> = vscode.workspace.findFiles('**/' + 'api.php');
-		filesApiRoute.then((uris: vscode.Uri[]) => {
-			handleEe(uris, strFullNamespaceWithClassWithMethod, resolve, reject, progress, token);
+		// let filesApiRoute: Thenable<vscode.Uri[]> = vscode.workspace.findFiles('**/' + 'api.php');
+		// filesApiRoute.then((uris: vscode.Uri[]) => {
+		// 	handleEe(uris, strFullNamespaceWithClassWithMethod, resolve, reject, progress, token);
+		// }, (reason: any) => {
+		// 	console.log('File api.php not found', reason);
+		// });
+
+		Promise.all([
+			vscode.workspace.findFiles('**/' + 'webbb.php'),
+			vscode.workspace.findFiles('**/' + 'api.php')
+		]).then((value: [vscode.Uri[], vscode.Uri[]]) => {
+			let allUris: vscode.Uri[] = [];
+			allUris.push(...value[0]);
+			allUris.push(...value[1]);
+			handleEe(allUris, strFullNamespaceWithClassWithMethod, resolve, reject, progress, token);
 		}, (reason: any) => {
-			console.log('File api.php not found', reason);
-		});
+			console.log('File web.php or api.php not found', reason);
+		})
 	}
 
 	function handleEe(
@@ -271,13 +283,15 @@ export function activate(context: vscode.ExtensionContext) {
 		if (uris.length == 1) {
 			// OK
 		} else {
-			reject(new Error('MultipleFilesMatch'));
-			return;
+			// reject(new Error('MultipleFilesMatch'));
+			// return;
 		}
 
 		uris.forEach((uri, i: number, uriss) => {
 			let filePath: string = uri.toString();
+			console.log('Scanning file:', filePath);
 			// vscode.window.showInformationMessage(JSON.stringify(filePath));
+
 			vscode.workspace.openTextDocument(uri).then((textDocument: vscode.TextDocument) => {
 				// let selection = null;
 				let docText: string = textDocument.getText();
@@ -326,7 +340,7 @@ export function activate(context: vscode.ExtensionContext) {
 					selection: new vscode.Range(positionStart, positionEnd),
 				};
 
-				setTimeout(function () {
+				setTimeout(() => {
 					progress.report({ increment: 99, message: "Done" });
 					console.log('console Done');
 
@@ -334,6 +348,8 @@ export function activate(context: vscode.ExtensionContext) {
 
 					resolve('ResolveFindingDone');
 				}, 500);
+			}, (reason: any) => {
+				//
 			});
 		});
 	}
@@ -457,7 +473,7 @@ export function activate(context: vscode.ExtensionContext) {
 						selection: selectionRange,
 					};
 
-					setTimeout(function () {
+					setTimeout(() => {
 						progress.report({ increment: 99, message: "Done" });
 						console.log('console Done');
 
