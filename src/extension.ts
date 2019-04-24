@@ -101,8 +101,8 @@ export function activate(context: vscode.ExtensionContext) {
 				title: "Laravel: Finding controller declaration"
 			}, (progress: vscode.Progress<{ message?: string; increment?: number }>, token: vscode.CancellationToken) => {
 				return new Promise<string>((resolve: (value?: string) => void, reject: (reason?: any) => void) => {
-					mResolve = resolve;
-					mReject = reject;
+					mResolve = resolve; // To stop progress indicator later
+					mReject = reject; // To stop progress indicator later
 
 					// progress.report({ increment: 1, message: "..." });
 					parsePhpClassAndMethod(strResultMatch, resolve, reject, progress, token);
@@ -114,6 +114,8 @@ export function activate(context: vscode.ExtensionContext) {
 			}, (reason: any) => {
 				console.log('progress onRejected', reason);
 			});
+
+			break; // Loop exactly 1 time
 		}
 	});
 
@@ -354,12 +356,12 @@ export function activate(context: vscode.ExtensionContext) {
 		});
 	}
 
-	function parsePhpClassAndMethod(
+	async function parsePhpClassAndMethod(
 		str: string,
-		resolve: (value?: string) => void,
-		reject: (reason?: any) => void,
-		progress: vscode.Progress<{ message?: string; increment?: number }>,
-		token: vscode.CancellationToken
+		resolveParent: (value?: string) => void, // To stop progress indicator later
+		rejectParent: (reason?: any) => void, // To stop progress indicator later
+		progressParent: vscode.Progress<{ message?: string; increment?: number }>,
+		tokenParent: vscode.CancellationToken
 	) {
 		let strFiltered: string = str.replace(/[,]/g, '')
 			.trim()
@@ -388,102 +390,98 @@ export function activate(context: vscode.ExtensionContext) {
 		let strFilenamePrefix: string = arrStrPhpNamespace[arrStrPhpNamespace.length - 1]; // OneController
 		// vscode.window.showInformationMessage(strFilenamePrefix);
 
-		let files: Thenable<vscode.Uri[]> = vscode.workspace.findFiles('**/' + strFilenamePrefix + '.php');
-		files.then((uris: vscode.Uri[]) => {
-			uris.forEach((uri, i: number, uriss) => {
-				let filePath: string = uri.toString();
-				// vscode.window.showInformationMessage(JSON.stringify(filePath));
+		let uris: vscode.Uri[] = await vscode.workspace.findFiles('**/' + strFilenamePrefix + '.php');
+		for (let i = 0; i < uris.length; i++) {
+			const uri = uris[i];
+			let filePath: string = uri.toString();
+			console.log('Scanning file:', filePath);
+			// vscode.window.showInformationMessage(JSON.stringify(filePath));
 
-				vscode.workspace.openTextDocument(uri).then((textDocument: vscode.TextDocument) => {
-					// let selection = null;
-					let docText: string = textDocument.getText();
+			let textDocument: vscode.TextDocument = await vscode.workspace.openTextDocument(uri);
+			// let selection = null;
+			let docText: string = textDocument.getText();
 
-					// 1. Is PHP File?
-					if (docText.indexOf('<?php') == 0) {
-						// OK
-					} else {
-						// Not PHP File
-						reject(new Error('NotPhpFile'));
-						return;
-					}
+			// 1. Is PHP File?
+			if (docText.indexOf('<?php') == 0) {
+				// OK
+			} else {
+				// Not PHP File
+				// rejectParent(new Error('NotPhpFile'));
+				continue;
+			}
 
-					// 2. Find Namespace
-					let strNamespacePrefix: string = '';
-					let namespacePosition: number = docText.indexOf('namespace App\\Http\\Controllers' + strNamespacePrefix);
-					if (namespacePosition == -1) {
-						// Not Found
-						reject(new Error('NamespaceNotFound'));
-						return;
-					}
+			// 2. Find Namespace
+			let strNamespacePrefix: string = '';
+			let namespacePosition: number = docText.indexOf('namespace App\\Http\\Controllers' + strNamespacePrefix);
+			if (namespacePosition == -1) {
+				// Not Found
+				// rejectParent(new Error('NamespaceNotFound'));
+				continue;
+			}
 
-					// 3. Find Exact Namespace;
-					// Note: In php file will look like: "namespace App\Http\Controllers\Api\Some\Other;"
-					let arrNamespaceWithoutClassName = arrStrPhpNamespace.slice(0, -1); // [Api,Some,Other]
-					let strExtraSeparator: string = '\\';
-					if (arrStrPhpNamespace.length == 1) {
-						strExtraSeparator = ''; // If only classname available
-					}
-					let strFullNamespace = 'namespace App\\Http\\Controllers' + strExtraSeparator + arrNamespaceWithoutClassName.join('\\') + ';';
-					// vscode.window.showInformationMessage(strFullNamespace);
-					let exactNamespacePosition: number = docText.indexOf(strFullNamespace);
-					if (exactNamespacePosition == -1) {
-						// Not Found
-						reject(new Error('ExactNamespaceNotFound'));
-						return;
-					}
+			// 3. Find Exact Namespace;
+			// Note: In php file will look like: "namespace App\Http\Controllers\Api\Some\Other;"
+			let arrNamespaceWithoutClassName = arrStrPhpNamespace.slice(0, -1); // [Api,Some,Other]
+			let strExtraSeparator: string = '\\';
+			if (arrStrPhpNamespace.length == 1) {
+				strExtraSeparator = ''; // If only classname available
+			}
+			let strFullNamespace = 'namespace App\\Http\\Controllers' + strExtraSeparator + arrNamespaceWithoutClassName.join('\\') + ';';
+			// vscode.window.showInformationMessage(strFullNamespace);
+			let exactNamespacePosition: number = docText.indexOf(strFullNamespace);
+			if (exactNamespacePosition == -1) {
+				// Not Found
+				// rejectParent(new Error('ExactNamespaceNotFound'));
+				continue;
+			}
 
-					// 4. Find Class Name
-					let classNamePosition: number = docText.indexOf('class ' + strFilenamePrefix + ' ');
-					if (classNamePosition == -1) {
-						// Not Found
-						reject(new Error('ClassNameNotFound'));
-						return;
-					}
+			// 4. Find Class Name
+			let classNamePosition: number = docText.indexOf('class ' + strFilenamePrefix + ' ');
+			if (classNamePosition == -1) {
+				// Not Found
+				// rejectParent(new Error('ClassNameNotFound'));
+				continue;
+			}
 
-					// 5. Find Method Name
-					// To highlight the class name (Default)
-					let posStart: vscode.Position = textDocument.positionAt(classNamePosition + 'class '.length);
-					let posEnd: vscode.Position = textDocument.positionAt('class '.length + classNamePosition + strPhpMethodName.length);
-					// To highlight the method name
-					if (strPhpMethodName.length > 0) {
-						let methodPosition: number = docText.indexOf(' function ' + strPhpMethodName + '(');
-						// vscode.window.showInformationMessage(JSON.stringify(methodPosition));
-						if (methodPosition == -1) {
-							// Method name Not Found
-							reject(new Error('MethodNameNotFound'));
-							return;
-						} else {
-							// Method name Found
-							posStart = textDocument.positionAt(methodPosition + ' function '.length);
-							posEnd = textDocument.positionAt(' function '.length + methodPosition + strPhpMethodName.length);
-						}
-					}
+			// 5. Find Method Name
+			// To highlight the class name (Default)
+			let posStart: vscode.Position = textDocument.positionAt(classNamePosition + 'class '.length);
+			let posEnd: vscode.Position = textDocument.positionAt('class '.length + classNamePosition + strPhpMethodName.length);
+			// To highlight the method name
+			if (strPhpMethodName.length > 0) {
+				let methodPosition: number = docText.indexOf(' function ' + strPhpMethodName + '(');
+				// vscode.window.showInformationMessage(JSON.stringify(methodPosition));
+				if (methodPosition == -1) {
+					// Method name Not Found
+					// rejectParent(new Error('MethodNameNotFound'));
+					continue;
+				} else {
+					// Method name Found
+					posStart = textDocument.positionAt(methodPosition + ' function '.length);
+					posEnd = textDocument.positionAt(' function '.length + methodPosition + strPhpMethodName.length);
+				}
+			}
 
-					// vscode.window.showInformationMessage(strPhpNamespace);
+			// vscode.window.showInformationMessage(strPhpNamespace);
 
-					let selectionRange: vscode.Range = new vscode.Range(
-						posStart,
-						posEnd
-					);
+			let selectionRange: vscode.Range = new vscode.Range(
+				posStart,
+				posEnd
+			);
 
-					let options: vscode.TextDocumentShowOptions = {
-						viewColumn: undefined,
-						preserveFocus: false,
-						preview: true,
-						selection: selectionRange,
-					};
+			let options: vscode.TextDocumentShowOptions = {
+				viewColumn: undefined,
+				preserveFocus: false,
+				preview: true,
+				selection: selectionRange,
+			};
 
-					setTimeout(() => {
-						progress.report({ increment: 99, message: "Done" });
-						console.log('console Done');
+			vscode.window.showTextDocument(textDocument.uri, options);
+		}
 
-						vscode.window.showTextDocument(textDocument.uri, options);
-
-						resolve('ResolveFindingDone');
-					}, 500);
-				});
-			});
-		})
+		progressParent.report({ increment: 99, message: "Done" });
+		console.log('console Done');
+		resolveParent('ResolveFindingDone');
 	}
 
 	function parseClassName(textDocument: vscode.TextDocument): string {
