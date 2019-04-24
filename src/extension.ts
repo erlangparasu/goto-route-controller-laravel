@@ -310,9 +310,9 @@ export function activate(context: vscode.ExtensionContext) {
 				continue;
 			}
 
-			let positionStart: vscode.Position = textDocument.positionAt(fullStartPosition)
+			let positionStart: vscode.Position = textDocument.positionAt(fullStartPosition + 1)
 			// let line: vscode.TextLine = textDocument.lineAt(positionStart.line)
-			let positionEnd: vscode.Position = textDocument.positionAt(fullEndPosition)
+			let positionEnd: vscode.Position = textDocument.positionAt(fullEndPosition - 1)
 
 			// Note: "Api\Home\BookController@index"
 			let ee = textDocument.getText(
