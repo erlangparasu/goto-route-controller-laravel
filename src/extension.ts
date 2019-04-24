@@ -257,22 +257,6 @@ export function activate(context: vscode.ExtensionContext) {
 		let strFullNamespaceWithClassWithMethod = strNamespaceWithClass + "@" + parsedMethodName;
 		// vscode.window.showInformationMessage(strFullNamespaceWithClassWithMethod);
 
-		// TODO: make chain search, web.php first, then api.php.
-
-		// let filesWebRoute: Thenable<vscode.Uri[]> = vscode.workspace.findFiles('**/' + 'web.php');
-		// filesWebRoute.then((uris: vscode.Uri[]) => {
-		// 	handleEe(uris, strFullNamespaceWithClassWithMethod, resolve, reject, progress, token);
-		// }, (reason: any) => {
-		// 	console.log('File web.php not found', reason);
-		// });
-
-		// let filesApiRoute: Thenable<vscode.Uri[]> = vscode.workspace.findFiles('**/' + 'api.php');
-		// filesApiRoute.then((uris: vscode.Uri[]) => {
-		// 	handleEe(uris, strFullNamespaceWithClassWithMethod, resolve, reject, progress, token);
-		// }, (reason: any) => {
-		// 	console.log('File api.php not found', reason);
-		// });
-
 		let urisAll: vscode.Uri[] = [];
 		let uris1 = await vscode.workspace.findFiles('**/' + 'web.php');
 		let uris2 = await vscode.workspace.findFiles('**/' + 'api.php');
