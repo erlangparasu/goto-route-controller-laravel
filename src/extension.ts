@@ -316,9 +316,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 			// Note: "Api\Home\BookController@index"
 			let ee = textDocument.getText(
-				new vscode.Range(
-					positionStart, positionEnd
-				)
+				new vscode.Range(positionStart, positionEnd)
 			)
 			// console.log("TCL: activate -> ee", ee)
 
@@ -445,16 +443,11 @@ export function activate(context: vscode.ExtensionContext) {
 
 			// vscode.window.showInformationMessage(strPhpNamespace);
 
-			let selectionRange: vscode.Range = new vscode.Range(
-				posStart,
-				posEnd
-			);
-
 			let options: vscode.TextDocumentShowOptions = {
 				viewColumn: undefined,
 				preserveFocus: false,
 				preview: true,
-				selection: selectionRange,
+				selection: new vscode.Range(posStart, posStart),
 			};
 
 			vscode.window.showTextDocument(textDocument.uri, options);
