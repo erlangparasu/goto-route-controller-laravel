@@ -32,6 +32,12 @@ export function activate(context: vscode.ExtensionContext) {
 	const regEx: RegExp = /'([a-zA-Z\\]+)\w+Controller(@\w+)?'/g;
 
 	let disposableA = vscode.commands.registerTextEditorCommand('extension.openControllerClassFile', (textEditor: vscode.TextEditor, edit: vscode.TextEditorEdit, args: any[]) => {
+		try {
+			mReject(new Error('CancelProgress'));
+		} catch (e) {
+			// Do nothing.
+		}
+
 		let textLine: vscode.TextLine = textEditor.document.lineAt(textEditor.selection.start);
 		// let str: string = textEditor.document.getText(textEditor.selection);
 		// vscode.window.showInformationMessage(textLine.text);
@@ -40,11 +46,6 @@ export function activate(context: vscode.ExtensionContext) {
 		if (strUri.indexOf('routes') == -1) {
 			// This file is not inside routes directory
 			vscode.window.showInformationMessage('This file is not inside routes directory');
-			try {
-				mReject(new Error('NotInsideRoutesDirectory'));
-			} catch (e) {
-				// Do nothing.
-			}
 			return;
 		}
 		if ((strUri.indexOf('web.php') != -1) || (strUri.indexOf('api.php') != -1)) {
@@ -52,21 +53,11 @@ export function activate(context: vscode.ExtensionContext) {
 		} else {
 			// This file is not web.php or api.php
 			vscode.window.showInformationMessage('This file is not web.php or api.php');
-			try {
-				mReject(new Error('FileIsNotWebPhpOrApiPhp'));
-			} catch (e) {
-				// Do nothing.
-			}
 			return;
 		}
 		if (textEditor.document.getText().indexOf('Route::') == -1) {
 			// No route declaration found in this file
 			vscode.window.showInformationMessage('No route declaration found in this file');
-			try {
-				mReject(new Error('NoRouteDeclarationFound'));
-			} catch (e) {
-				// Do nothing.
-			}
 			return;
 		}
 
@@ -91,16 +82,17 @@ export function activate(context: vscode.ExtensionContext) {
 			let strResultMatch: string = match[0];
 			// vscode.window.showInformationMessage(strResultMatch);
 
-			try {
-				mReject(new Error('CancelProgress'));
-			} catch (e) {
-				// Do nothing.
-			}
 			mThenableProgress = vscode.window.withProgress({
 				location: vscode.ProgressLocation.Notification,
 				title: "Laravel: Finding controller declaration"
 			}, (progress: vscode.Progress<{ message?: string; increment?: number }>, token: vscode.CancellationToken) => {
 				return new Promise<string>((resolve: (value?: string) => void, reject: (reason?: any) => void) => {
+					try {
+						mReject(new Error('CancelProgress'));
+					} catch (e) {
+						// Do nothing.
+					}
+
 					mResolve = resolve; // To stop progress indicator later
 					mReject = reject; // To stop progress indicator later
 
@@ -120,20 +112,27 @@ export function activate(context: vscode.ExtensionContext) {
 	});
 
 	let disposableB = vscode.commands.registerTextEditorCommand('extension.openRoutesDeclarationFile', (textEditor: vscode.TextEditor, edit: vscode.TextEditorEdit, args: any[]) => {
-		let progressOptions = {
-			location: vscode.ProgressLocation.Notification,
-			title: "Laravel: Finding route declaration"
-		};
-
 		try {
 			mReject(new Error('CancelProgress'));
 		} catch (e) {
 			// Do nothing.
 		}
+
+		let progressOptions = {
+			location: vscode.ProgressLocation.Notification,
+			title: "Laravel: Finding route declaration"
+		};
+
 		mThenableProgress = vscode.window.withProgress(
 			progressOptions,
 			(progress: vscode.Progress<{ message?: string; increment?: number }>, token: vscode.CancellationToken) => {
 				return new Promise<string>((resolve: (value?: string) => void, reject: (reason?: any) => void) => {
+					try {
+						mReject(new Error('CancelProgress'));
+					} catch (e) {
+						// Do nothing.
+					}
+
 					mResolve = resolve;
 					mReject = reject;
 
@@ -150,14 +149,14 @@ export function activate(context: vscode.ExtensionContext) {
 		});
 	});
 
-	function handleTextEditorCommand(
+	async function handleTextEditorCommand(
 		textEditor: vscode.TextEditor,
 		edit: vscode.TextEditorEdit,
 		args: any[],
-		resolve: (value?: string) => void,
-		reject: (reason?: any) => void,
-		progress: vscode.Progress<{ message?: string; increment?: number }>,
-		token: vscode.CancellationToken
+		resolveParent: (value?: string) => void,
+		rejectParent: (reason?: any) => void,
+		progressParent: vscode.Progress<{ message?: string; increment?: number }>,
+		tokenParent: vscode.CancellationToken
 	) {
 		let textLine: vscode.TextLine = textEditor.document.lineAt(textEditor.selection.start);
 		// let str: string = textEditor.document.getText(textEditor.selection);
@@ -178,7 +177,7 @@ export function activate(context: vscode.ExtensionContext) {
 			// OK
 		} else {
 			// Not PHP File
-			reject(new Error('NotPhpFile'));
+			rejectParent(new Error('NotPhpFile'));
 			return;
 		}
 
@@ -188,7 +187,7 @@ export function activate(context: vscode.ExtensionContext) {
 		// console.log("TCL: activate -> namespacePosition", namespacePosition)
 		if (namespacePosition == -1) {
 			// Not Found
-			reject(new Error('NamespaceNotFound'));
+			rejectParent(new Error('NamespaceNotFound'));
 			return;
 		}
 
@@ -261,99 +260,83 @@ export function activate(context: vscode.ExtensionContext) {
 		// 	console.log('File api.php not found', reason);
 		// });
 
-		Promise.all([
-			vscode.workspace.findFiles('**/' + 'webbb.php'),
-			vscode.workspace.findFiles('**/' + 'api.php')
-		]).then((value: [vscode.Uri[], vscode.Uri[]]) => {
-			let allUris: vscode.Uri[] = [];
-			allUris.push(...value[0]);
-			allUris.push(...value[1]);
-			handleEe(allUris, strFullNamespaceWithClassWithMethod, resolve, reject, progress, token);
-		}, (reason: any) => {
-			console.log('File web.php or api.php not found', reason);
-		})
+		let urisAll: vscode.Uri[] = [];
+		let uris1 = await vscode.workspace.findFiles('**/' + 'web.php');
+		let uris2 = await vscode.workspace.findFiles('**/' + 'api.php');
+		urisAll.push(...uris1);
+		urisAll.push(...uris2);
+		await handleEe(urisAll, strFullNamespaceWithClassWithMethod, resolveParent, rejectParent, progressParent, tokenParent);
 	}
 
-	function handleEe(
+	async function handleEe(
 		uris: vscode.Uri[],
 		strFullNamespaceWithClassWithMethod: string,
-		resolve: (value?: string) => void,
-		reject: (reason?: any) => void,
-		progress: vscode.Progress<{ message?: string; increment?: number }>,
-		token: vscode.CancellationToken
+		resolveParent: (value?: string) => void,
+		rejectParent: (reason?: any) => void,
+		progressParent: vscode.Progress<{ message?: string; increment?: number }>,
+		tokenParent: vscode.CancellationToken
 	) {
-		if (uris.length == 1) {
-			// OK
-		} else {
-			// reject(new Error('MultipleFilesMatch'));
-			// return;
-		}
-
-		uris.forEach((uri, i: number, uriss) => {
+		for (let i = 0; i < uris.length; i++) {
+			const uri = uris[i];
 			let filePath: string = uri.toString();
 			console.log('Scanning file:', filePath);
 			// vscode.window.showInformationMessage(JSON.stringify(filePath));
 
-			vscode.workspace.openTextDocument(uri).then((textDocument: vscode.TextDocument) => {
-				// let selection = null;
-				let docText: string = textDocument.getText();
+			// TODO: replace with async and await...
+			let textDocument: vscode.TextDocument = await vscode.workspace.openTextDocument(uri);
+			// let selection = null;
+			let docText: string = textDocument.getText();
 
-				// 1. Is PHP File?
-				if (docText.indexOf('<?php') == 0) {
-					// OK
-				} else {
-					// Not PHP File
-					reject(new Error('NotPhpFile'));
-					return;
-				}
+			// 1. Is PHP File?
+			if (docText.indexOf('<?php') == 0) {
+				// OK
+			} else {
+				// Not PHP File
+				// rejectParent(new Error('NotPhpFile'));
+				continue;
+			}
 
-				// 2. Try to find text: example: "Api\Home\BookController@index"
-				let fullStartPosition: number = docText.indexOf("'" + strFullNamespaceWithClassWithMethod + "'")
-				if (fullStartPosition == -1) {
-					// Not found
-					reject(new Error('ClassAndMethodTextNotFound'));
-					return;
-				}
+			// 2. Try to find text: example: "Api\Home\BookController@index"
+			let fullStartPosition: number = docText.indexOf("'" + strFullNamespaceWithClassWithMethod + "'")
+			if (fullStartPosition == -1) {
+				// Not found
+				// rejectParent(new Error('ClassAndMethodTextNotFound'));
+				continue;
+			}
 
-				// 2. Try to find end position of method name (single qoute)
-				let fullEndPosition: number = fullStartPosition + ("'" + strFullNamespaceWithClassWithMethod + "'").length
-				if (fullEndPosition == -1) {
-					// Not found
-					reject(new Error('EndOfMethodSymbolNotFound'));
-					return;
-				}
+			// 2. Try to find end position of method name (single qoute)
+			let fullEndPosition: number = fullStartPosition + ("'" + strFullNamespaceWithClassWithMethod + "'").length
+			if (fullEndPosition == -1) {
+				// Not found
+				// rejectParent(new Error('EndOfMethodSymbolNotFound'));
+				continue;
+			}
 
-				let positionStart: vscode.Position = textDocument.positionAt(fullStartPosition)
-				// let line: vscode.TextLine = textDocument.lineAt(positionStart.line)
-				let positionEnd: vscode.Position = textDocument.positionAt(fullEndPosition)
+			let positionStart: vscode.Position = textDocument.positionAt(fullStartPosition)
+			// let line: vscode.TextLine = textDocument.lineAt(positionStart.line)
+			let positionEnd: vscode.Position = textDocument.positionAt(fullEndPosition)
 
-				// Note: "Api\Home\BookController@index"
-				let ee = textDocument.getText(
-					new vscode.Range(
-						positionStart, positionEnd
-					)
+			// Note: "Api\Home\BookController@index"
+			let ee = textDocument.getText(
+				new vscode.Range(
+					positionStart, positionEnd
 				)
-				// console.log("TCL: activate -> ee", ee)
+			)
+			// console.log("TCL: activate -> ee", ee)
 
-				let options: vscode.TextDocumentShowOptions = {
-					viewColumn: undefined,
-					preserveFocus: false,
-					preview: true,
-					selection: new vscode.Range(positionStart, positionEnd),
-				};
+			let options: vscode.TextDocumentShowOptions = {
+				viewColumn: undefined,
+				preserveFocus: false,
+				preview: true,
+				selection: new vscode.Range(positionStart, positionEnd),
+			};
 
-				setTimeout(() => {
-					progress.report({ increment: 99, message: "Done" });
-					console.log('console Done');
+			vscode.window.showTextDocument(textDocument.uri, options);
+		}
 
-					vscode.window.showTextDocument(textDocument.uri, options);
-
-					resolve('ResolveFindingDone');
-				}, 500);
-			}, (reason: any) => {
-				//
-			});
-		});
+		progressParent.report({ increment: 99, message: "Done" });
+		console.log('console Done');
+		resolveParent('ResolveFindingDone');
 	}
 
 	async function parsePhpClassAndMethod(
