@@ -117,8 +117,12 @@ export function activate(context: vscode.ExtensionContext) {
 						.then(() => {
 							//
 						})
-						.catch(() => {
-							//
+						.catch((reason: any) => {
+							try {
+								mReject(reason);
+							} catch (e) {
+								// Do nothing.
+							}
 						})
 						.finally(() => {
 							//
@@ -166,8 +170,12 @@ export function activate(context: vscode.ExtensionContext) {
 						.then(() => {
 							//
 						})
-						.catch(() => {
-							//
+						.catch((reason: any) => {
+							try {
+								mReject(reason);
+							} catch (e) {
+								// Do nothing.
+							}
 						})
 						.finally(() => {
 							//
