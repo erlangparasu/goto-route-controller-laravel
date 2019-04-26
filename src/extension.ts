@@ -96,6 +96,7 @@ export function activate(context: vscode.ExtensionContext) {
                 // const smallNumbers: vscode.DecorationOptions[] = [];
                 // const largeNumbers: vscode.DecorationOptions[] = [];
 
+                let isFound = false;
                 let match;
                 const regEx: RegExp = /'([a-zA-Z\\]+)\w+Controller(@\w+)?'/g;
                 while (match = regEx.exec(text)) {
@@ -128,7 +129,12 @@ export function activate(context: vscode.ExtensionContext) {
                             //
                         });;
 
+                    isFound = true;
                     break;
+                }
+
+                if (!isFound) {
+                    reject(new Error('NoMatch'));
                 }
             });
         });
