@@ -50,78 +50,81 @@ export function activate(context: vscode.ExtensionContext) {
 			// Do nothing.
 		}
 
-		let textLine: vscode.TextLine = textEditor.document.lineAt(textEditor.selection.start);
-		// let str: string = textEditor.document.getText(textEditor.selection);
-		// vscode.window.showInformationMessage(textLine.text);
+		mThenableProgress = vscode.window.withProgress({
+			location: vscode.ProgressLocation.Notification,
+			title: "Laravel: Finding controller declaration"
+		}, (progress: vscode.Progress<{ message?: string; increment?: number }>, token: vscode.CancellationToken) => {
+			return new Promise<string>(async (resolve: (value?: string) => void, reject: (reason?: any) => void) => {
+				try {
+					mReject(new Error('CancelProgress'));
+				} catch (e) {
+					// Do nothing.
+				}
 
-		let strUri = textEditor.document.uri.path;
-		if (strUri.indexOf('routes') == -1) {
-			// This file is not inside routes directory
-			vscode.window.showInformationMessage('This file is not inside routes directory');
-			return;
-		}
-		if ((strUri.indexOf('web.php') != -1) || (strUri.indexOf('api.php') != -1)) {
-			// OK
-		} else {
-			// This file is not web.php or api.php
-			vscode.window.showInformationMessage('This file is not web.php or api.php');
-			return;
-		}
-		if (textEditor.document.getText().indexOf('Route::') == -1) {
-			// No route declaration found in this file
-			vscode.window.showInformationMessage('No route declaration found in this file');
-			return;
-		}
+				mResolve = resolve; // To stop progress indicator later
+				mReject = reject; // To stop progress indicator later
 
-		let activeEditor: vscode.TextEditor = textEditor;
-		// const text = activeEditor.document.getText();
-		const text: string = textLine.text;
-		// const smallNumbers: vscode.DecorationOptions[] = [];
-		// const largeNumbers: vscode.DecorationOptions[] = [];
+				let textLine: vscode.TextLine = textEditor.document.lineAt(textEditor.selection.start);
+				// let str: string = textEditor.document.getText(textEditor.selection);
+				// vscode.window.showInformationMessage(textLine.text);
 
-		let match;
-		const regEx: RegExp = /'([a-zA-Z\\]+)\w+Controller(@\w+)?'/g;
-		while (match = regEx.exec(text)) {
-			const startPos: vscode.Position = activeEditor.document.positionAt(match.index);
-			const endPos: vscode.Position = activeEditor.document.positionAt(match.index + match[0].length);
+				let strUri = textEditor.document.uri.path;
+				if (strUri.indexOf('routes') == -1) {
+					// This file is not inside routes directory
+					vscode.window.showInformationMessage('This file is not inside routes directory');
+					reject(new Error('NotInsideRoutesDirectory'));
+					return;
+				}
+				if ((strUri.indexOf('web.php') != -1) || (strUri.indexOf('api.php') != -1)) {
+					// OK
+				} else {
+					// This file is not web.php or api.php
+					vscode.window.showInformationMessage('This file is not web.php or api.php');
+					reject(new Error('NotWebPhpOrApiPhp'));
+					return;
+				}
+				if (textEditor.document.getText().indexOf('Route::') == -1) {
+					// No route declaration found in this file
+					vscode.window.showInformationMessage('No route declaration found in this file');
+					reject(new Error('NoRouteDeclarationFound'));
+					return;
+				}
 
-			const decoration = { range: new vscode.Range(startPos, endPos), hoverMessage: 'File **' + match[0] + '**' };
-			// if (match[0].length < 3) {
-			// smallNumbers.push(decoration);
-			// } else {
-			// largeNumbers.push(decoration);
-			// }
+				let activeEditor: vscode.TextEditor = textEditor;
+				// const text = activeEditor.document.getText();
+				const text: string = textLine.text;
+				// const smallNumbers: vscode.DecorationOptions[] = [];
+				// const largeNumbers: vscode.DecorationOptions[] = [];
 
-			let strResultMatch: string = match[0];
-			// vscode.window.showInformationMessage(strResultMatch);
+				let match;
+				const regEx: RegExp = /'([a-zA-Z\\]+)\w+Controller(@\w+)?'/g;
+				while (match = regEx.exec(text)) {
+					const startPos: vscode.Position = activeEditor.document.positionAt(match.index);
+					const endPos: vscode.Position = activeEditor.document.positionAt(match.index + match[0].length);
 
-			mThenableProgress = vscode.window.withProgress({
-				location: vscode.ProgressLocation.Notification,
-				title: "Laravel: Finding controller declaration"
-			}, (progress: vscode.Progress<{ message?: string; increment?: number }>, token: vscode.CancellationToken) => {
-				return new Promise<string>((resolve: (value?: string) => void, reject: (reason?: any) => void) => {
-					try {
-						mReject(new Error('CancelProgress'));
-					} catch (e) {
-						// Do nothing.
-					}
+					const decoration = { range: new vscode.Range(startPos, endPos), hoverMessage: 'File **' + match[0] + '**' };
+					// if (match[0].length < 3) {
+					// smallNumbers.push(decoration);
+					// } else {
+					// largeNumbers.push(decoration);
+					// }
 
-					mResolve = resolve; // To stop progress indicator later
-					mReject = reject; // To stop progress indicator later
+					let strResultMatch: string = match[0];
+					// vscode.window.showInformationMessage(strResultMatch);
 
 					// progress.report({ increment: 1, message: "..." });
-					parsePhpClassAndMethod(strResultMatch, resolve, reject, progress, token);
-				});
-			});
+					await parsePhpClassAndMethod(strResultMatch, resolve, reject, progress, token);
 
-			mThenableProgress.then((value: string) => {
-				console.log('progress onFulfilled', value);
-			}, (reason: any) => {
-				console.log('progress onRejected', reason);
+					break;
+				}
 			});
+		});
 
-			break; // Loop exactly 1 time
-		}
+		mThenableProgress.then((value: string) => {
+			console.log('progress onFulfilled', value);
+		}, (reason: any) => {
+			console.log('progress onRejected', reason);
+		});
 	});
 
 	let disposableB = vscode.commands.registerTextEditorCommand('extension.openRoutesDeclarationFile', (textEditor: vscode.TextEditor, edit: vscode.TextEditorEdit, args: any[]) => {
