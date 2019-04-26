@@ -142,7 +142,7 @@ export function activate(context: vscode.ExtensionContext) {
 		mThenableProgress = vscode.window.withProgress(
 			progressOptions,
 			(progress: vscode.Progress<{ message?: string; increment?: number }>, token: vscode.CancellationToken) => {
-				return new Promise<string>((resolve: (value?: string) => void, reject: (reason?: any) => void) => {
+				return new Promise<string>(async (resolve: (value?: string) => void, reject: (reason?: any) => void) => {
 					try {
 						mReject(new Error('CancelProgress'));
 					} catch (e) {
@@ -153,7 +153,7 @@ export function activate(context: vscode.ExtensionContext) {
 					mReject = reject;
 
 					// progress.report({ increment: 1, message: "..." });
-					handleTextEditorCommand(textEditor, edit, args, resolve, reject, progress, token);
+					await handleTextEditorCommand(textEditor, edit, args, resolve, reject, progress, token);
 				});
 			}
 		);
