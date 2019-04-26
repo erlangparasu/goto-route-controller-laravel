@@ -113,7 +113,16 @@ export function activate(context: vscode.ExtensionContext) {
 					// vscode.window.showInformationMessage(strResultMatch);
 
 					// progress.report({ increment: 1, message: "..." });
-					parsePhpClassAndMethod(strResultMatch, resolve, reject, progress, token);
+					parsePhpClassAndMethod(strResultMatch, resolve, reject, progress, token)
+						.then(() => {
+							//
+						})
+						.catch(() => {
+							//
+						})
+						.finally(() => {
+							//
+						});;
 
 					break;
 				}
@@ -153,7 +162,16 @@ export function activate(context: vscode.ExtensionContext) {
 					mReject = reject;
 
 					// progress.report({ increment: 1, message: "..." });
-					handleTextEditorCommand(textEditor, edit, args, resolve, reject, progress, token);
+					handleTextEditorCommand(textEditor, edit, args, resolve, reject, progress, token)
+						.then(() => {
+							//
+						})
+						.catch(() => {
+							//
+						})
+						.finally(() => {
+							//
+						});
 				});
 			}
 		);
