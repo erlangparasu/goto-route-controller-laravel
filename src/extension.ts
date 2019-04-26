@@ -322,37 +322,33 @@ export function activate(context: vscode.ExtensionContext) {
 				continue;
 			}
 
-			// 2. Try to find text: example: "Api\Home\BookController@index"
-			let fullStartPosition: number = docText.indexOf("'" + strFullNamespaceWithClassWithMethod + "'")
+			// 2. Try to find text: example: "'Api\Home\BookController@index'"
+			let fullStartPosition: number = docText.indexOf("'" + strFullNamespaceWithClassWithMethod + "'");
 			if (fullStartPosition == -1) {
 				// Not found
 				// rejectParent(new Error('ClassAndMethodTextNotFound'));
 				continue;
 			}
+			let fullEndPosition: number = fullStartPosition + (("'" + strFullNamespaceWithClassWithMethod + "'").length);
 
-			// 2. Try to find end position of method name (single qoute)
-			let fullEndPosition: number = fullStartPosition + ("'" + strFullNamespaceWithClassWithMethod + "'").length
-			if (fullEndPosition == -1) {
-				// Not found
-				// rejectParent(new Error('EndOfMethodSymbolNotFound'));
-				continue;
-			}
-
-			let positionStart: vscode.Position = textDocument.positionAt(fullStartPosition + 1)
-			// let line: vscode.TextLine = textDocument.lineAt(positionStart.line)
-			let positionEnd: vscode.Position = textDocument.positionAt(fullEndPosition - 1)
+			let positionStart: vscode.Position = textDocument.positionAt(fullStartPosition + 1);
+			// let line: vscode.TextLine = textDocument.lineAt(positionStart.line);
+			let positionEnd: vscode.Position = textDocument.positionAt(fullEndPosition - 1);
 
 			// Note: "Api\Home\BookController@index"
 			let ee = textDocument.getText(
 				new vscode.Range(positionStart, positionEnd)
-			)
-			// console.log("TCL: activate -> ee", ee)
+			);
+			// console.log("TCL: activate -> ee", ee);
+
+			// TODO: Find text agaein using fullEndPosition as offset
+			// ...
 
 			let options: vscode.TextDocumentShowOptions = {
 				viewColumn: undefined,
 				preserveFocus: false,
 				preview: true,
-				selection: new vscode.Range(positionStart, positionEnd),
+				selection: new vscode.Range(positionStart, positionEnd)
 			};
 
 			vscode.window.showTextDocument(textDocument.uri, options);
