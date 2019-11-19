@@ -32,7 +32,7 @@ export function activate(context: vscode.ExtensionContext) {
     // The command has been defined in the package.json file
     // Now provide the implementation of the command with registerCommand
     // The commandId parameter must match the command field in package.json
-    // let disposableC = vscode.commands.registerCommand('enableLaravelRouteClassOpener', () => {
+    // let disposable0 = vscode.commands.registerCommand('enableLaravelRouteClassOpener', () => {
     // 	// The code you place here will be executed every time your command is executed
     // 	// Display a message box to the user
     // 	vscode.window.showInformationMessage('laravel-goto-controller-route enabled!');
@@ -52,7 +52,7 @@ export function activate(context: vscode.ExtensionContext) {
 
         mThenableProgress = vscode.window.withProgress({
             location: vscode.ProgressLocation.Notification,
-            title: "Laravel: Finding controller declaration"
+            title: "EP: Laravel: Finding controller declaration"
         }, (progress: vscode.Progress<{ message?: string; increment?: number }>, token: vscode.CancellationToken) => {
             return new Promise<string>((resolve: (value?: string) => void, reject: (reason?: any) => void) => {
                 try {
@@ -69,13 +69,13 @@ export function activate(context: vscode.ExtensionContext) {
                 // vscode.window.showInformationMessage(textLine.text);
 
                 let strUri = textEditor.document.uri.path;
-                if (strUri.indexOf('routes') == -1) {
+                if (strUri.indexOf('routes') === -1) {
                     // This file is not inside routes directory
                     vscode.window.showInformationMessage('This file is not inside routes directory');
                     reject(new Error('NotInsideRoutesDirectory'));
                     return;
                 }
-                if ((strUri.indexOf('web.php') != -1) || (strUri.indexOf('api.php') != -1)) {
+                if ((strUri.indexOf('web.php') !== -1) || (strUri.indexOf('api.php') !== -1)) {
                     // OK
                 } else {
                     // This file is not web.php or api.php
@@ -83,7 +83,7 @@ export function activate(context: vscode.ExtensionContext) {
                     reject(new Error('NotWebPhpOrApiPhp'));
                     return;
                 }
-                if (textEditor.document.getText().indexOf('Route::') == -1) {
+                if (textEditor.document.getText().indexOf('Route::') === -1) {
                     // No route declaration found in this file
                     vscode.window.showInformationMessage('No route declaration found in this file');
                     reject(new Error('NoRouteDeclarationFound'));
@@ -127,7 +127,7 @@ export function activate(context: vscode.ExtensionContext) {
                         })
                         .finally(() => {
                             //
-                        });;
+                        });
 
                     isFound = true;
                     break;
@@ -155,7 +155,7 @@ export function activate(context: vscode.ExtensionContext) {
 
         let progressOptions = {
             location: vscode.ProgressLocation.Notification,
-            title: "Laravel: Finding route declaration"
+            title: "EP: Laravel: Finding route declaration"
         };
 
         mThenableProgress = vscode.window.withProgress(
@@ -197,6 +197,250 @@ export function activate(context: vscode.ExtensionContext) {
         });
     });
 
+    let disposableC = vscode.commands.registerTextEditorCommand('extension.findBladeUsage', (textEditor: vscode.TextEditor, edit: vscode.TextEditorEdit, args: any[]) => {
+        try {
+            mReject(new Error('CancelProgress'));
+        } catch (e) {
+            // Do nothing.
+        }
+
+        mThenableProgress = vscode.window.withProgress({
+            location: vscode.ProgressLocation.Notification,
+            title: "EP: Laravel: Finding blade usage"
+        }, (progress: vscode.Progress<{ message?: string; increment?: number }>, token: vscode.CancellationToken) => {
+            return new Promise<string>((resolve: (value?: string) => void, reject: (reason?: any) => void) => {
+                try {
+                    mReject(new Error('CancelProgress'));
+                } catch (e) {
+                    // Do nothing.
+                }
+
+                mResolve = resolve; // To stop progress indicator later
+                mReject = reject; // To stop progress indicator later
+
+                let textLine: vscode.TextLine = textEditor.document.lineAt(textEditor.selection.start);
+                // let str: string = textEditor.document.getText(textEditor.selection);
+                // vscode.window.showInformationMessage(textLine.text);
+
+                let strUri = textEditor.document.uri.path;
+                if (strUri.indexOf('resources') === -1 || strUri.indexOf('views') === -1) {
+                    // This file is not inside "views" directory
+                    vscode.window.showInformationMessage('This file is not inside "views" directory');
+                    reject(new Error('NotInsideViewsDirectory'));
+                    return;
+                }
+                if ((strUri.indexOf('.blade.php') !== -1)) {
+                    // OK
+                } else {
+                    // Unsuported file
+                    vscode.window.showInformationMessage('This file is not a blade file');
+                    reject(new Error('NotBladeFile'));
+                    return;
+                }
+
+                let strFiltered: string = strUri.replace('.blade.php', '')
+                    // .trim()
+                    // .replace(/[\']/g, '')
+                    // .replace(/["]/g, '')
+                    .trim();
+                // console.log(strFiltered);
+                let indexStrResources = strFiltered.indexOf('resources');
+                let strr = strFiltered.substr(indexStrResources);
+                // console.log(strr);
+                if (strr.indexOf('resources') === -1 || strr.indexOf('views') === -1) {
+                    vscode.window.showInformationMessage('This file is not inside "views" directory (2)');
+                    reject(new Error('NotInsideViewsDirectory2'));
+                    return;
+                }
+                let indexStrViews = strr.indexOf('views');
+                strr = strr.substr(indexStrViews + 'views'.length + 1); // 1 = directory separator char
+                // console.log(strr);
+                strr = strr.trim();
+                if (strr) {
+                    // OK
+                } else {
+                    vscode.window.showInformationMessage('No usage found');
+                    reject(new Error('NoUsageFound'));
+                    return;
+                }
+
+                console.log('Horray! File is valid.');
+                strr = strr.replace(/[\\]/g, '.')
+                    .replace(/[/]/g, '.')
+                    .trim();
+                console.log(strr); // Example: front.single
+                let strToFind: string = "view('" + strr + "'";
+
+                handleFindBladeUsage(strToFind, textEditor, edit, args, resolve, reject, progress, token)
+                        .then(() => {
+                            //
+                        })
+                        .catch((reason: any) => {
+                            try {
+                                mReject(reason);
+                            } catch (e) {
+                                // Do nothing.
+                            }
+                        })
+                        .finally(() => {
+                            // Do nothing.
+                        });
+            });
+        });
+
+        mThenableProgress.then((value: string) => {
+            console.log('progress onFulfilled', value);
+        }, (reason: any) => {
+            console.log('progress onRejected', reason);
+        });
+    });
+
+    async function handleFindBladeUsage(
+        strToFind: string,
+        textEditor: vscode.TextEditor,
+        edit: vscode.TextEditorEdit,
+        args: any[],
+        resolveParent: (value?: string) => void,
+        rejectParent: (reason?: any) => void,
+        progressParent: vscode.Progress<{ message?: string; increment?: number }>,
+        tokenParent: vscode.CancellationToken
+    ) {
+        let urisAll: vscode.Uri[] = [];
+        let uris1 = await vscode.workspace.findFiles('**/*.php', '**/vendor/**');
+        urisAll.push(...uris1);
+        await handleBladeEe(urisAll, strToFind, resolveParent, rejectParent, progressParent, tokenParent);
+    }
+
+    async function handleBladeEe(
+        uris: vscode.Uri[],
+        strToFind: string,
+        resolveParent: (value?: string) => void,
+        rejectParent: (reason?: any) => void,
+        progressParent: vscode.Progress<{ message?: string; increment?: number }>,
+        tokenParent: vscode.CancellationToken
+    ) {
+        // Note: uris length is exactly 2 (web.php and api.php)
+        let arrResult: MyResult[] = [];
+        for (let i = 0; i < uris.length; i++) {
+            const uri = uris[i];
+            let filePath: string = uri.toString();
+            console.log('Scanning file:', filePath);
+            // vscode.window.showInformationMessage(JSON.stringify(filePath));
+
+            // TODO: replace with async and await...
+            let textDocument: vscode.TextDocument = await vscode.workspace.openTextDocument(uri);
+            // let selection = null;
+            let docText: string = textDocument.getText();
+
+            // 1. Is PHP File?
+            if (docText.indexOf('<?php') === 0) {
+                // OK
+            } else {
+                // Not PHP File
+                // rejectParent(new Error('NotPhpFile'));
+                continue;
+            }
+
+            // TODO: Find text again using fullEndPosition as offset...
+            let tempOffset = 0;
+            while (true) {
+                // 2. Try to find text: example: "'front.single'"
+                let fullStartPosition: number = docText.indexOf(strToFind, tempOffset);
+                if (fullStartPosition === -1) {
+                    // Not found
+                    // rejectParent(new Error('ViewCallNotFound'));
+                    break;
+                }
+
+                let fullEndPosition: number = fullStartPosition + ((strToFind).length);
+                tempOffset = fullEndPosition;
+
+                let positionStart: vscode.Position = textDocument.positionAt(fullStartPosition + "view('".length);
+                // let line: vscode.TextLine = textDocument.lineAt(positionStart.line);
+                let positionEnd: vscode.Position = textDocument.positionAt(fullEndPosition - 1);
+
+                // Note: "'front.single'"
+                let ee = textDocument.getText(new vscode.Range(positionStart, positionEnd));
+                // console.log("TCL: activate -> ee", ee);
+
+                arrResult.push({
+                    uri: textDocument.uri,
+                    positionStart: positionStart,
+                    positionEnd: positionEnd
+                });
+            }
+        }
+        console.log(arrResult);
+
+        if (arrResult.length === 1) {
+            for (let i = 0; i < arrResult.length; i++) {
+                const rec: MyResult = arrResult[i];
+
+                let showOptions: vscode.TextDocumentShowOptions = {
+                    viewColumn: undefined,
+                    preserveFocus: false,
+                    preview: true,
+                    selection: new vscode.Range(rec.positionStart, rec.positionEnd),
+                };
+                vscode.window.showTextDocument(rec.uri, showOptions);
+
+                break;
+            }
+        } else if (arrResult.length > 1) {
+            let arrStrPath: string[] = [];
+            for (let x = 0; x < arrResult.length; x++) {
+                const rec = arrResult[x];
+
+                let strOption = '';
+                strOption += rec.uri.path;
+                strOption += ' ';
+                strOption += ' - Line: ';
+                strOption += (rec.positionStart.line + 1).toString();
+
+                arrStrPath.push(strOption);
+            }
+
+            // vscode.window.showInformationMessage("Blade usage found: Choose one ^");
+
+            vscode.window.showQuickPick(
+                arrStrPath,
+                {
+                    placeHolder: "Multiple Blade usage found: " + strToFind + " ...",
+                    ignoreFocusOut: true,
+                    canPickMany: false,
+                }
+            ).then((value: string | undefined) => {
+                for (let i = 0; i < arrResult.length; i++) {
+                    const rec: MyResult = arrResult[i];
+
+                    let strOption = '';
+                    strOption += rec.uri.path;
+                    strOption += ' ';
+                    strOption += ' - Line: ';
+                    strOption += (rec.positionStart.line + 1).toString();
+
+                    if (value === strOption) {
+                        let showOptions: vscode.TextDocumentShowOptions = {
+                            viewColumn: undefined,
+                            preserveFocus: false,
+                            preview: true,
+                            selection: new vscode.Range(rec.positionStart, rec.positionEnd),
+                        };
+                        vscode.window.showTextDocument(rec.uri, showOptions);
+
+                        break;
+                    }
+                }
+            }, (reason: any) => {
+                console.log('onrejected:', reason);
+            });
+        }
+
+        progressParent.report({ increment: 99, message: "Done" });
+        console.log('console Done');
+        resolveParent('ResolveFindingDone');
+    }
+
     async function handleTextEditorCommand(
         textEditor: vscode.TextEditor,
         edit: vscode.TextEditorEdit,
@@ -221,7 +465,7 @@ export function activate(context: vscode.ExtensionContext) {
         let docText: string = textDocument.getText();
 
         // 1. Is PHP File?
-        if (docText.indexOf('<?php') == 0) {
+        if (docText.indexOf('<?php') === 0) {
             // OK
         } else {
             // Not PHP File
@@ -233,7 +477,7 @@ export function activate(context: vscode.ExtensionContext) {
         let strNamespacePrefix: string = '';
         let namespacePosition: number = docText.indexOf('namespace App\\Http\\Controllers' + strNamespacePrefix);
         // console.log("TCL: activate -> namespacePosition", namespacePosition)
-        if (namespacePosition == -1) {
+        if (namespacePosition === -1) {
             // Not Found
             rejectParent(new Error('NamespaceNotFound'));
             return;
@@ -256,17 +500,17 @@ export function activate(context: vscode.ExtensionContext) {
         // console.log("TCL: activate -> strNameSpaceShort ###>", strNameSpaceShort, "<###")
 
         // Note: get string like: "Api\Home"
-        if (strNameSpaceShort.indexOf('\\') == 0) {
-            strNameSpaceShort = strNameSpaceShort.substr(1)
+        if (strNameSpaceShort.indexOf('\\') === 0) {
+            strNameSpaceShort = strNameSpaceShort.substr(1);
         }
         // vscode.window.showInformationMessage(strNameSpaceShort);
-        let strClassName = parseClassName(textDocument) // Note: "BookController"
+        let strClassName = parseClassName(textDocument); // Note: "BookController"
 
         // Note: "Api\Home\BookController"
-        let strNamespaceWithClass = strNameSpaceShort + '\\' + strClassName
+        let strNamespaceWithClass = strNameSpaceShort + '\\' + strClassName;
         // Remove backslash (for empty namespace)
-        if (strNamespaceWithClass.indexOf('\\') == 0) {
-            strNamespaceWithClass = strNamespaceWithClass.substr(1)
+        if (strNamespaceWithClass.indexOf('\\') === 0) {
+            strNamespaceWithClass = strNamespaceWithClass.substr(1);
         }
 
         // Find method name recursively upward until we found the method name
@@ -274,12 +518,12 @@ export function activate(context: vscode.ExtensionContext) {
         let tempPositionCursor: vscode.Position = textEditor.selection.start;
         let dooLoop: boolean = true;
         while (dooLoop) {
-            if (textLine.lineNumber == 1) {
+            if (textLine.lineNumber === 1) {
                 dooLoop = false;
                 break;
             } else {
                 parsedMethodName = parseMethodName(textLine).trim();
-                if (parsedMethodName.length == 0) {
+                if (parsedMethodName.length === 0) {
                     tempPositionCursor = tempPositionCursor.translate(-1);
                     textLine = textEditor.document.lineAt(tempPositionCursor);
                 } else {
@@ -328,7 +572,7 @@ export function activate(context: vscode.ExtensionContext) {
             let docText: string = textDocument.getText();
 
             // 1. Is PHP File?
-            if (docText.indexOf('<?php') == 0) {
+            if (docText.indexOf('<?php') === 0) {
                 // OK
             } else {
                 // Not PHP File
@@ -344,7 +588,7 @@ export function activate(context: vscode.ExtensionContext) {
                     "'" + strFullNamespaceWithClassWithMethod + "'",
                     tempOffset
                 );
-                if (fullStartPosition == -1) {
+                if (fullStartPosition === -1) {
                     // Not found
                     // rejectParent(new Error('ClassAndMethodTextNotFound'));
                     break;
@@ -370,7 +614,7 @@ export function activate(context: vscode.ExtensionContext) {
         }
         console.log(arrResult);
 
-        if (arrResult.length == 1) {
+        if (arrResult.length === 1) {
             for (let i = 0; i < arrResult.length; i++) {
                 const rec: MyResult = arrResult[i];
 
@@ -454,7 +698,7 @@ export function activate(context: vscode.ExtensionContext) {
 
         let strPhpNamespace: string = '';
         let strPhpMethodName: string = '';
-        if (strFiltered.indexOf('@') == -1) {
+        if (strFiltered.indexOf('@') === -1) {
             // Controller Only
             strPhpNamespace = strFiltered;
         } else {
@@ -484,7 +728,7 @@ export function activate(context: vscode.ExtensionContext) {
             let docText: string = textDocument.getText();
 
             // 1. Is PHP File?
-            if (docText.indexOf('<?php') == 0) {
+            if (docText.indexOf('<?php') === 0) {
                 // OK
             } else {
                 // Not PHP File
@@ -495,7 +739,7 @@ export function activate(context: vscode.ExtensionContext) {
             // 2. Find Namespace
             let strNamespacePrefix: string = '';
             let namespacePosition: number = docText.indexOf('namespace App\\Http\\Controllers' + strNamespacePrefix);
-            if (namespacePosition == -1) {
+            if (namespacePosition === -1) {
                 // Not Found
                 // rejectParent(new Error('NamespaceNotFound'));
                 continue;
@@ -505,13 +749,13 @@ export function activate(context: vscode.ExtensionContext) {
             // Note: In php file will look like: "namespace App\Http\Controllers\Api\Some\Other;"
             let arrNamespaceWithoutClassName = arrStrPhpNamespace.slice(0, -1); // [Api,Some,Other]
             let strExtraSeparator: string = '\\';
-            if (arrStrPhpNamespace.length == 1) {
+            if (arrStrPhpNamespace.length === 1) {
                 strExtraSeparator = ''; // If only classname available
             }
             let strFullNamespace = 'namespace App\\Http\\Controllers' + strExtraSeparator + arrNamespaceWithoutClassName.join('\\') + ';';
             // vscode.window.showInformationMessage(strFullNamespace);
             let exactNamespacePosition: number = docText.indexOf(strFullNamespace);
-            if (exactNamespacePosition == -1) {
+            if (exactNamespacePosition === -1) {
                 // Not Found
                 // rejectParent(new Error('ExactNamespaceNotFound'));
                 continue;
@@ -519,7 +763,7 @@ export function activate(context: vscode.ExtensionContext) {
 
             // 4. Find Class Name
             let classNamePosition: number = docText.indexOf('class ' + strFilenamePrefix + ' ');
-            if (classNamePosition == -1) {
+            if (classNamePosition === -1) {
                 // Not Found
                 // rejectParent(new Error('ClassNameNotFound'));
                 continue;
@@ -533,7 +777,7 @@ export function activate(context: vscode.ExtensionContext) {
             if (strPhpMethodName.length > 0) {
                 let methodPosition: number = docText.indexOf(' function ' + strPhpMethodName + '(');
                 // vscode.window.showInformationMessage(JSON.stringify(methodPosition));
-                if (methodPosition == -1) {
+                if (methodPosition === -1) {
                     // Method name Not Found
                     // rejectParent(new Error('MethodNameNotFound'));
                     continue;
@@ -554,7 +798,7 @@ export function activate(context: vscode.ExtensionContext) {
         }
 
         // console.log(arrResult);
-        if (arrResult.length == 1) {
+        if (arrResult.length === 1) {
             for (let i = 0; i < arrResult.length; i++) {
                 const rec: MyResult = arrResult[i];
 
@@ -618,8 +862,8 @@ export function activate(context: vscode.ExtensionContext) {
             // const decoration = { range: new vscode.Range(startPos, endPos), hoverMessage: 'File **' + match[0] + '**' };
 
             let strMatch = match[0];
-            strMatch = strMatch.replace('class', '')
-            strMatch = strMatch.trim()
+            strMatch = strMatch.replace('class', '');
+            strMatch = strMatch.trim();
             // vscode.window.showInformationMessage(strMatch);
             return strMatch;
         }
@@ -733,7 +977,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     context.subscriptions.push(disposableA);
     context.subscriptions.push(disposableB);
-    // context.subscriptions.push(disposableC);
+    context.subscriptions.push(disposableC);
 
     function sleep(ms: number) {
         return new Promise(resolve => setTimeout(resolve, ms));

@@ -1,8 +1,8 @@
 {
     "name": "goto-route-controller-laravel",
     "displayName": "goto-route-controller-laravel",
-    "description": "laravel helper: go to route declaration, go to controller method declaration",
-    "version": "2.0.8",
+    "description": "laravel helper: go to route declaration, go to controller method declaration, find blade usage",
+    "version": "2.1.0",
     "engines": {
         "vscode": "^1.33.0"
     },
@@ -21,23 +21,25 @@
     ],
     "main": "./out/extension.js",
     "contributes": {
-        "commands": [
-            {
+        "commands": [{
                 "command": "extension.enableLaravelRouteClassOpener",
                 "title": "Enable LaravelRouteClassOpener"
             },
             {
                 "command": "extension.openControllerClassFile",
-                "title": "Laravel: Go to Controller"
+                "title": "EP: Laravel: Go to Controller"
             },
             {
                 "command": "extension.openRoutesDeclarationFile",
-                "title": "Laravel: Go to Route"
+                "title": "EP: Laravel: Go to Route"
+            },
+            {
+                "command": "extension.findBladeUsage",
+                "title": "EP: Laravel: Find blade usage"
             }
         ],
         "menus": {
-            "editor/context": [
-                {
+            "editor/context": [{
                     "command": "extension.openControllerClassFile",
                     "when": "editorTextFocus && editorLangId == php && resourceExtname == .php && resourceFilename =~ /(web|api)\\.php/",
                     "group": "navigation"
@@ -45,6 +47,11 @@
                 {
                     "command": "extension.openRoutesDeclarationFile",
                     "when": "editorTextFocus && editorLangId == php && resourceExtname == .php && resourceFilename =~ /(Controller)\\.php/",
+                    "group": "navigation"
+                },
+                {
+                    "command": "extension.findBladeUsage",
+                    "when": "editorTextFocus && editorLangId == php && resourceExtname == .php && resourceFilename =~ /(blade)\\.php/",
                     "group": "navigation"
                 }
             ]
@@ -58,10 +65,12 @@
         "test": "yarn run compile && node ./node_modules/vscode/bin/test"
     },
     "devDependencies": {
-        "typescript": "^3.3.1",
-        "vscode": "^1.1.28",
-        "tslint": "^5.12.1",
-        "@types/node": "^10.12.21",
-        "@types/mocha": "^2.2.42"
+        "ts-loader": "6.2.1",
+        "tslint": "^5.20.1",
+        "typescript": "3.7.2",
+        "vsce": "1.69.0",
+        "vscode": "^1.1.36",
+        "@types/mocha": "^5.2.7",
+        "@types/node": "^10.12.21"
     }
 }
