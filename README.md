@@ -30,4 +30,4 @@
 
 -----------------------------------------------------------------------------------------------------------
 
-**Enjoy!**
+https://marketplace.visualstudio.com/items?itemName=erlangparasu.goto-route-controller-laravel
