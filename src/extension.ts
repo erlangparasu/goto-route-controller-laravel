@@ -1024,17 +1024,20 @@ function updateUiStatusBar() {
     if (isBladeFile(textEditor)) {
         // From: .blade.php ---> Controller.php
         mStatusBarItem.command = 'extension.findBladeUsage';
-        mStatusBarItem.text = 'EP-Controller';
+        mStatusBarItem.text = 'EP-findController';
+        mStatusBarItem.tooltip = "Find controller";
         mStatusBarItem.show();
     } else if (isControllerFile(textEditor)) {
         // From: Controller.php ---> web.php | api.php
         mStatusBarItem.command = 'extension.openRoutesDeclarationFile';
-        mStatusBarItem.text = 'EP-Route';
+        mStatusBarItem.text = 'EP-findRoute';
+        mStatusBarItem.tooltip = "Find route";
         mStatusBarItem.show();
     } else if (isRouteFile(textEditor)) {
         // From: web.php | api.php ---> Controller.php
         mStatusBarItem.command = 'extension.openControllerClassFile';
-        mStatusBarItem.text = 'EP-Controller';
+        mStatusBarItem.text = 'EP-findController';
+        mStatusBarItem.tooltip = "Find controller";
         mStatusBarItem.show();
     }
 }
