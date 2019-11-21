@@ -17,7 +17,9 @@
         "url": "https://gitlab.com/erlangparasu/goto-route-controller-laravel"
     },
     "activationEvents": [
-        "onLanguage:php"
+        "workspaceContains:**/artisan",
+        "workspaceContains:**/server.php",
+        "workspaceContains:**/composer.json"
     ],
     "main": "./out/extension.js",
     "contributes": {
@@ -27,15 +29,15 @@
             },
             {
                 "command": "extension.openControllerClassFile",
-                "title": "EP: Laravel: Go to Controller"
+                "title": "EP: Go to Controller"
             },
             {
                 "command": "extension.openRoutesDeclarationFile",
-                "title": "EP: Laravel: Go to Route"
+                "title": "EP: Go to Route"
             },
             {
                 "command": "extension.findBladeUsage",
-                "title": "EP: Laravel: Find blade usage"
+                "title": "EP: Find blade usage"
             }
         ],
         "menus": {

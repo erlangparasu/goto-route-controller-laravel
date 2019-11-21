@@ -21,13 +21,19 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 
+let mThenableProgress;
+let mIntervalId: NodeJS.Timeout;
+let mResolve: (value?: string) => void;
+let mReject: (reason?: any) => void;
+let mStatusBarItem: vscode.StatusBarItem;
+
 // This method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
 
     // Use the console to output diagnostic information (console.log) and errors (console.error)
     // This line of code will only be executed once when your extension is activated
-    console.log('Extension "laravel-goto-controller-route" is now active!');
+    console.log('Extension "goto-route-controller-laravel" activate');
 
     // The command has been defined in the package.json file
     // Now provide the implementation of the command with registerCommand
@@ -35,14 +41,10 @@ export function activate(context: vscode.ExtensionContext) {
     // let disposable0 = vscode.commands.registerCommand('enableLaravelRouteClassOpener', () => {
     // 	// The code you place here will be executed every time your command is executed
     // 	// Display a message box to the user
-    // 	vscode.window.showInformationMessage('laravel-goto-controller-route enabled!');
+    // 	vscode.window.showInformationMessage('goto-route-controller-laravel activate');
     // });
 
-    let mThenableProgress;
-    let mIntervalId: NodeJS.Timeout;
-    let mResolve: (value?: string) => void;
-    let mReject: (reason?: any) => void;
-
+    // Find Controller
     let disposableA = vscode.commands.registerTextEditorCommand('extension.openControllerClassFile', (textEditor: vscode.TextEditor, edit: vscode.TextEditorEdit, args: any[]) => {
         try {
             mReject(new Error('CancelProgress'));
@@ -146,6 +148,7 @@ export function activate(context: vscode.ExtensionContext) {
         });
     });
 
+    // Find Route
     let disposableB = vscode.commands.registerTextEditorCommand('extension.openRoutesDeclarationFile', (textEditor: vscode.TextEditor, edit: vscode.TextEditorEdit, args: any[]) => {
         try {
             mReject(new Error('CancelProgress'));
@@ -197,6 +200,7 @@ export function activate(context: vscode.ExtensionContext) {
         });
     });
 
+    // Find blade usage (open controller file)
     let disposableC = vscode.commands.registerTextEditorCommand('extension.findBladeUsage', (textEditor: vscode.TextEditor, edit: vscode.TextEditorEdit, args: any[]) => {
         try {
             mReject(new Error('CancelProgress'));
@@ -272,19 +276,19 @@ export function activate(context: vscode.ExtensionContext) {
                 let strToFind: string = "view('" + strr + "'";
 
                 handleFindBladeUsage(strToFind, textEditor, edit, args, resolve, reject, progress, token)
-                        .then(() => {
-                            //
-                        })
-                        .catch((reason: any) => {
-                            try {
-                                mReject(reason);
-                            } catch (e) {
-                                // Do nothing.
-                            }
-                        })
-                        .finally(() => {
+                    .then(() => {
+                        //
+                    })
+                    .catch((reason: any) => {
+                        try {
+                            mReject(reason);
+                        } catch (e) {
                             // Do nothing.
-                        });
+                        }
+                    })
+                    .finally(() => {
+                        // Do nothing.
+                    });
             });
         });
 
@@ -973,18 +977,120 @@ export function activate(context: vscode.ExtensionContext) {
         }
     }, null, context.subscriptions);
 
-    //
+    // Create a new status bar item that we can now manage
+    mStatusBarItem = vscode.window.createStatusBarItem(
+        vscode.StatusBarAlignment.Right, 100
+    );
+    context.subscriptions.push(mStatusBarItem);
+    mStatusBarItem.hide(); // Default
 
     context.subscriptions.push(disposableA);
     context.subscriptions.push(disposableB);
     context.subscriptions.push(disposableC);
 
-    function sleep(ms: number) {
-        return new Promise(resolve => setTimeout(resolve, ms));
-    }
+    context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(function () {
+        updateUiStatusBar();
+    }));
+    context.subscriptions.push(vscode.window.onDidChangeTextEditorSelection(function () {
+        updateUiStatusBar();
+    }));
+
+    updateUiStatusBar();
 }
 
 // This method is called when your extension is deactivated
 export function deactivate() {
-    //
+    console.log('Extension "goto-route-controller-laravel" deactivate');
+}
+
+function sleep(ms: number) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function updateUiStatusBar() {
+    let textEditor = vscode.window.activeTextEditor;
+    if (textEditor === undefined) {
+        return;
+    }
+
+    let textLine: vscode.TextLine = textEditor.document.lineAt(textEditor.selection.start);
+    // let str: string = textEditor.document.getText(textEditor.selection);
+    // vscode.window.showInformationMessage(textLine.text);
+
+    mStatusBarItem.hide();
+    mStatusBarItem.command = '';
+    mStatusBarItem.text = '';
+
+    if (isBladeFile(textEditor)) {
+        // From: .blade.php ---> Controller.php
+        mStatusBarItem.command = 'extension.findBladeUsage';
+        mStatusBarItem.text = 'EP-Controller';
+        mStatusBarItem.show();
+    } else if (isControllerFile(textEditor)) {
+        // From: Controller.php ---> web.php | api.php
+        mStatusBarItem.command = 'extension.openRoutesDeclarationFile';
+        mStatusBarItem.text = 'EP-Route';
+        mStatusBarItem.show();
+    } else if (isRouteFile(textEditor)) {
+        // From: web.php | api.php ---> Controller.php
+        mStatusBarItem.command = 'extension.openControllerClassFile';
+        mStatusBarItem.text = 'EP-Controller';
+        mStatusBarItem.show();
+    }
+}
+
+function isControllerFile(textEditor: vscode.TextEditor): Boolean {
+    let docText = textEditor.document.getText();
+    let namespacePosition: number = docText.indexOf('namespace App\\Http\\Controllers');
+
+    if (namespacePosition === -1) {
+        return false;
+    }
+
+    return true;
+}
+
+function isBladeFile(textEditor: vscode.TextEditor): Boolean {
+    let strUri = textEditor.document.uri.path;
+    if (strUri.indexOf('resources') === -1 || strUri.indexOf('views') === -1) {
+        return false;
+    }
+    if ((strUri.indexOf('.blade.php') !== -1)) {
+        // OK
+    } else {
+        return false;
+    }
+
+    let strFiltered: string = strUri.replace('.blade.php', '')
+        // .trim()
+        // .replace(/[\']/g, '')
+        // .replace(/["]/g, '')
+        .trim();
+    // console.log(strFiltered);
+    let indexStrResources = strFiltered.indexOf('resources');
+    let strr = strFiltered.substr(indexStrResources);
+    // console.log(strr);
+    if (strr.indexOf('resources') === -1 || strr.indexOf('views') === -1) {
+        return false;
+    }
+    let indexStrViews = strr.indexOf('views');
+    strr = strr.substr(indexStrViews + 'views'.length + 1); // 1 = directory separator char
+    // console.log(strr);
+
+    strr = strr.trim();
+    if (strr) {
+        return true;
+    }
+
+    return false;
+}
+
+function isRouteFile(textEditor: vscode.TextEditor): Boolean {
+    let strUri = textEditor.document.uri.path;
+
+    if ((strUri.indexOf('web.php') !== -1) || (strUri.indexOf('api.php') !== -1)) {
+        return true;
+    }
+
+    return false;
 }
