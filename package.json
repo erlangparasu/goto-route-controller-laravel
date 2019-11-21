@@ -2,7 +2,7 @@
     "name": "goto-route-controller-laravel",
     "displayName": "goto-route-controller-laravel",
     "description": "laravel helper: go to route declaration, go to controller method declaration, find blade usage",
-    "version": "2.1.1",
+    "version": "2.1.2",
     "engines": {
         "vscode": "^1.33.0"
     },

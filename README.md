@@ -15,6 +15,8 @@
 4. Choose "EP: Laravel: Go to Controller"
 5. Please wait... Controller file will be displayed for you
 
+or just click **EP-findController** on statusbar
+
 #### Go to Route
 1. Open controller class like `BookController.php`
 2. Put cursor on line that contains method name like `function edit() {`
@@ -22,11 +24,15 @@
 4. Choose "EP: Laravel: Go to Route"
 5. Please wait... Route declaration file will be displayed for you
 
-#### Find blade usage (New)
+or just click **EP-findRoute** on statusbar
+
+#### Find blade usage
 1. Open an layout file like `index.blade.php`
 2. Right click on any line
 3. Choose "EP: Laravel: Find blade usage"
 4. Please wait... Blade usage will be displayed for you
+
+or just click **EP-findController** on statusbar
 
 -----------------------------------------------------------------------------------------------------------
 
