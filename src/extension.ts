@@ -54,7 +54,7 @@ export function activate(context: vscode.ExtensionContext) {
 
         mThenableProgress = vscode.window.withProgress({
             location: vscode.ProgressLocation.Notification,
-            title: "EP: Laravel: Finding controller declaration"
+            title: "EP: Finding controller declaration"
         }, (progress: vscode.Progress<{ message?: string; increment?: number }>, token: vscode.CancellationToken) => {
             return new Promise<string>((resolve: (value?: string) => void, reject: (reason?: any) => void) => {
                 try {
@@ -158,7 +158,7 @@ export function activate(context: vscode.ExtensionContext) {
 
         let progressOptions = {
             location: vscode.ProgressLocation.Notification,
-            title: "EP: Laravel: Finding route declaration"
+            title: "EP: Finding route declaration"
         };
 
         mThenableProgress = vscode.window.withProgress(
@@ -210,7 +210,7 @@ export function activate(context: vscode.ExtensionContext) {
 
         mThenableProgress = vscode.window.withProgress({
             location: vscode.ProgressLocation.Notification,
-            title: "EP: Laravel: Finding blade usage"
+            title: "EP: Finding blade usage"
         }, (progress: vscode.Progress<{ message?: string; increment?: number }>, token: vscode.CancellationToken) => {
             return new Promise<string>((resolve: (value?: string) => void, reject: (reason?: any) => void) => {
                 try {
