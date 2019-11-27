@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 2.1.6
+
+- performance: scan faster by exclude some directory
+- progress UI: show count of scanned files
+
 ## 2.1.5
 
 - bugfix
