@@ -83,7 +83,7 @@ export function activate(context: vscode.ExtensionContext) {
                 let strUri = textEditor.document.uri.path;
                 if (strUri.indexOf('routes') === -1) {
                     // This file is not inside routes directory
-                    vscode.window.showInformationMessage('This file is not inside routes directory');
+                    vscode.window.showInformationMessage(TAG + ' Oops... This file is not inside routes directory');
                     reject(new Error('NotInsideRoutesDirectory'));
                     return;
                 }
@@ -91,13 +91,13 @@ export function activate(context: vscode.ExtensionContext) {
                     // OK
                 } else {
                     // This file is not web.php or api.php
-                    vscode.window.showInformationMessage('This file is not web.php or api.php');
+                    vscode.window.showInformationMessage(TAG + ' Oops... This file is not web.php or api.php');
                     reject(new Error('NotWebPhpOrApiPhp'));
                     return;
                 }
                 if (textEditor.document.getText().indexOf('Route::') === -1) {
                     // No route declaration found in this file
-                    vscode.window.showInformationMessage('No route declaration found in this file');
+                    vscode.window.showInformationMessage(TAG + ' Oops... No route declaration found in this file');
                     reject(new Error('NoRouteDeclarationFound'));
                     return;
                 }
@@ -146,7 +146,12 @@ export function activate(context: vscode.ExtensionContext) {
                 }
 
                 if (!isFound) {
+                    vscode.window.showInformationMessage(TAG + ' Oops... Current line does not contains controller class name');
                     reject(new Error('NoMatch'));
+
+                    // let progressParent = progress;
+                    // progressParent.report({ increment: 100 });
+                    // progressParent.report({ message: 'Oops...' });
                 }
             });
         });
@@ -238,7 +243,7 @@ export function activate(context: vscode.ExtensionContext) {
                 let strUri = textEditor.document.uri.path;
                 if (strUri.indexOf('resources') === -1 || strUri.indexOf('views') === -1) {
                     // This file is not inside 'views' directory
-                    vscode.window.showInformationMessage('This file is not inside "views" directory');
+                    vscode.window.showInformationMessage(TAG + ' Oops... This file is not inside "views" directory');
                     reject(new Error('NotInsideViewsDirectory'));
                     return;
                 }
@@ -246,7 +251,7 @@ export function activate(context: vscode.ExtensionContext) {
                     // OK
                 } else {
                     // Unsuported file
-                    vscode.window.showInformationMessage('This file is not a blade file');
+                    vscode.window.showInformationMessage(TAG + ' Oops... This file is not a blade file');
                     reject(new Error('NotBladeFile'));
                     return;
                 }
@@ -261,7 +266,7 @@ export function activate(context: vscode.ExtensionContext) {
                 let strr = strFiltered.substr(indexStrResources);
                 // console.log(strr);
                 if (strr.indexOf('resources') === -1 || strr.indexOf('views') === -1) {
-                    vscode.window.showInformationMessage('This file is not inside "views" directory (2)');
+                    vscode.window.showInformationMessage(TAG + ' Oops... This file is not inside "views" directory (2)');
                     reject(new Error('NotInsideViewsDirectory2'));
                     return;
                 }
@@ -272,7 +277,7 @@ export function activate(context: vscode.ExtensionContext) {
                 if (strr) {
                     // OK
                 } else {
-                    vscode.window.showInformationMessage('No usage found');
+                    vscode.window.showInformationMessage(TAG + ' Oops... No usage found');
                     reject(new Error('NoUsageFound'));
                     return;
                 }
@@ -656,8 +661,13 @@ async function handleUrisFindBladeUsage(
     }
 
     progressParent.report({ increment: 100 });
+    if (arrResult.length > 0) {
+        resolveParent('ResolveFindingDone');
+    } else {
+        progressParent.report({ message: 'Declaration not found.' });
+    }
+
     console.log(TAG, 'handleUrisFindBladeUsage: done');
-    resolveParent('ResolveFindingDone');
 }
 
 async function handleControllerToRoute(
@@ -1032,8 +1042,13 @@ async function handleUrisControllerToRoute(
     }
 
     progressParent.report({ increment: 100 });
+    if (arrResult.length > 0) {
+        resolveParent('ResolveFindingDone');
+    } else {
+        progressParent.report({ message: 'Declaration not found.' });
+    }
+
     console.log(TAG, 'handleUrisControllerToRoute: done');
-    resolveParent('ResolveFindingDone');
 }
 
 async function handleRouteToController(
@@ -1204,14 +1219,19 @@ async function handleRouteToController(
     }
 
     progressParent.report({ increment: 100 });
+    if (arrResult.length > 0) {
+        resolveParent('ResolveFindingDone');
+    } else {
+        progressParent.report({ message: 'Declaration not found.' });
+    }
+
     console.log(TAG, 'handleRouteToController: done');
-    resolveParent('ResolveFindingDone');
 }
 
 function updateProgressMessage(i: number, uris: vscode.Uri[], progressParent: vscode.Progress<{ message?: string | undefined; increment?: number | undefined; }>) {
     let ttt = uris.length / 100;
     if ((i + 1) % 5 === 0) {
-        progressParent.report({message: '' + (i + 1) + '/' + uris.length + ' files scanned' });
+        progressParent.report({ message: '' + (i + 1) + '/' + uris.length + ' files scanned' });
     }
 }
 
@@ -1281,3 +1301,22 @@ function routeFilterStr(strInput: string): string {
 
     return strInput.substr(offset);
 }
+
+var rgbToHex = function (rgb: number): string {
+    var hex = Number(rgb).toString(16);
+    if (hex.length < 2) {
+        hex = "0" + hex;
+    }
+    return hex;
+};
+
+var fullColorHex = function (r: number, g: number, b: number) {
+    var red = rgbToHex(r);
+    var green = rgbToHex(g);
+    var blue = rgbToHex(b);
+    return red + green + blue;
+};
+
+var fullColorHexWithHash = function (r: number, g: number, b: number) {
+    return "#" + fullColorHex(r, g, b);
+};
