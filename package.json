@@ -48,7 +48,7 @@
                 },
                 {
                     "command": "extension.openRoutesDeclarationFile",
-                    "when": "editorTextFocus && resourceExtname == .php && resourceFilename =~ /(Controller)\\.php/",
+                    "when": "editorTextFocus && resourceExtname == .php && resourceFilename =~ /\\.php/",
                     "group": "navigation"
                 },
                 {
