@@ -1050,12 +1050,11 @@ export function activate(context: vscode.ExtensionContext) {
 
     function parseMethodName(textLine: vscode.TextLine): string {
         let strDocument = textLine.text;
-        const regEx: RegExp = / public function \w+\(/g;
+        const regEx: RegExp = /  function \w+\(/g;
         let match;
         while (match = regEx.exec(strDocument)) {
-            let strMatch = match[0]; // Note: " public function index("
-            strMatch = strMatch.replace('public', '')
-                .replace('function', '')
+            let strMatch = match[0]; // Note: " function index("
+            strMatch = strMatch.replace('function', '')
                 .replace('(', '')
                 .trim();
 
