@@ -6,6 +6,8 @@
 - Go to controller method declaration
 - Find blade usage
 
+Extension (vsix) size: &plusmn;16 KB
+
 ## How to Use
 
 #### Go to Controller
