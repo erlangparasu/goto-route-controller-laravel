@@ -268,11 +268,11 @@ export function activate(context: vscode.ExtensionContext) {
                     return;
                 }
 
-                console.log('Horray! File is valid.');
+                // console.log('Horray! File is valid.');
                 strr = strr.replace(/[\\]/g, '.')
                     .replace(/[/]/g, '.')
                     .trim();
-                console.log(strr); // Example: front.single
+                // console.log(strr); // Example: front.single
                 let strToFind: string = "view('" + strr + "'";
 
                 handleFindBladeUsage(strToFind, textEditor, edit, args, resolve, reject, progress, token)
@@ -374,7 +374,7 @@ export function activate(context: vscode.ExtensionContext) {
                 });
             }
         }
-        console.log(arrResult);
+        // console.log(arrResult);
 
         if (arrResult.length === 1) {
             for (let i = 0; i < arrResult.length; i++) {
@@ -616,7 +616,7 @@ export function activate(context: vscode.ExtensionContext) {
                 });
             }
         }
-        console.log(arrResult);
+        // console.log(arrResult);
 
         if (arrResult.length === 1) {
             for (let i = 0; i < arrResult.length; i++) {
@@ -678,6 +678,146 @@ export function activate(context: vscode.ExtensionContext) {
             }, (reason: any) => {
                 console.log('onrejected:', reason);
             });
+        } else {
+            // Search for Route::resource
+
+            strFullNamespaceWithClassWithMethod = strFullNamespaceWithClassWithMethod
+                .substr(
+                    0,
+                    strFullNamespaceWithClassWithMethod.indexOf("@")
+                );
+
+            for (let i = 0; i < uris.length; i++) {
+                const uri = uris[i];
+                let filePath: string = uri.toString();
+                console.log('Scanning file X:', filePath);
+                // vscode.window.showInformationMessage(JSON.stringify(filePath));
+
+                // TODO: replace with async and await...
+                let textDocument: vscode.TextDocument = await vscode.workspace.openTextDocument(uri);
+                // let selection = null;
+                let docText: string = textDocument.getText();
+
+                // 1. Is PHP File?
+                if (docText.indexOf('<?php') === 0) {
+                    // OK
+                } else {
+                    // Not PHP File
+                    // rejectParent(new Error('NotPhpFile'));
+                    continue;
+                }
+
+                // TODO: Find text again using fullEndPosition as offset...
+                let tempOffset = 0;
+                while (true) {
+                    // 2. Try to find text: example: "'Api\Home\BookController@index'"
+                    let _otherOffset: number = docText.indexOf(
+                        "Route::resource",
+                        tempOffset
+                    );
+                    if (_otherOffset === -1) {
+                        tempOffset += "Route::resource".length;
+
+                        if (tempOffset > docText.length) {
+                            break;
+                        }
+
+                        continue;
+                    }
+                    let fullStartPosition = docText.indexOf(
+                        "'" + strFullNamespaceWithClassWithMethod + "'",
+                        tempOffset
+                    );
+                    if (fullStartPosition === -1) {
+                        // Not found
+                        // rejectParent(new Error('ClassAndMethodTextNotFound'));
+                        break;
+                    }
+
+                    let fullEndPosition: number = fullStartPosition + (("'" + strFullNamespaceWithClassWithMethod + "'").length);
+                    tempOffset = fullEndPosition;
+
+                    let positionStart: vscode.Position = textDocument.positionAt(fullStartPosition + 1);
+                    // let line: vscode.TextLine = textDocument.lineAt(positionStart.line);
+                    let positionEnd: vscode.Position = textDocument.positionAt(fullEndPosition - 1);
+
+                    // Note: "Api\Home\BookController@index"
+                    let ee = textDocument.getText(new vscode.Range(positionStart, positionEnd));
+                    // console.log("TCL: activate -> ee", ee);
+
+                    let item_ = {
+                        uri: textDocument.uri,
+                        positionStart: positionStart,
+                        positionEnd: positionEnd
+                    };
+
+                    // console.log('item_', item_);
+                    arrResult.push(item_);
+                }
+            }
+            // console.log('arrResult', arrResult);
+
+            if (arrResult.length === 1) {
+                for (let i = 0; i < arrResult.length; i++) {
+                    const rec: MyResult = arrResult[i];
+
+                    let showOptions: vscode.TextDocumentShowOptions = {
+                        viewColumn: undefined,
+                        preserveFocus: false,
+                        preview: true,
+                        selection: new vscode.Range(rec.positionStart, rec.positionEnd),
+                    };
+                    vscode.window.showTextDocument(rec.uri, showOptions);
+
+                    break;
+                }
+            } else if (arrResult.length > 1) {
+                let arrStrPath: string[] = [];
+                for (let x = 0; x < arrResult.length; x++) {
+                    const rec = arrResult[x];
+
+                    let strOption = '';
+                    strOption += rec.uri.path;
+                    strOption += ' ';
+                    strOption += ' - Line: ';
+                    strOption += (rec.positionStart.line + 1).toString();
+
+                    arrStrPath.push(strOption);
+                }
+
+                vscode.window.showQuickPick(
+                    arrStrPath,
+                    {
+                        placeHolder: "" + strFullNamespaceWithClassWithMethod + "",
+                        ignoreFocusOut: true,
+                        canPickMany: false,
+                    }
+                ).then((value: string | undefined) => {
+                    for (let i = 0; i < arrResult.length; i++) {
+                        const rec: MyResult = arrResult[i];
+
+                        let strOption = '';
+                        strOption += rec.uri.path;
+                        strOption += ' ';
+                        strOption += ' - Line: ';
+                        strOption += (rec.positionStart.line + 1).toString();
+
+                        if (value === strOption) {
+                            let showOptions: vscode.TextDocumentShowOptions = {
+                                viewColumn: undefined,
+                                preserveFocus: false,
+                                preview: true,
+                                selection: new vscode.Range(rec.positionStart, rec.positionEnd),
+                            };
+                            vscode.window.showTextDocument(rec.uri, showOptions);
+
+                            break;
+                        }
+                    }
+                }, (reason: any) => {
+                    console.log('onrejected:', reason);
+                });
+            }
         }
 
         progressParent.report({ increment: 99, message: "Done" });
