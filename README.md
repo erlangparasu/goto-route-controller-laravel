@@ -32,7 +32,7 @@ or just click **EP-findRoute** on statusbar
 3. Choose "EP: Laravel: Find blade usage"
 4. Please wait... Blade usage will be displayed for you
 
-or just click **EP-findController** on statusbar
+or just click **EP-findBladeUsage** on statusbar
 
 -----------------------------------------------------------------------------------------------------------
 

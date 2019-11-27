@@ -1024,8 +1024,8 @@ function updateUiStatusBar() {
     if (isBladeFile(textEditor)) {
         // From: .blade.php ---> Controller.php
         mStatusBarItem.command = 'extension.findBladeUsage';
-        mStatusBarItem.text = 'EP-findController';
-        mStatusBarItem.tooltip = "Find controller";
+        mStatusBarItem.text = 'EP-findBladeUsage';
+        mStatusBarItem.tooltip = "Find blade usage";
         mStatusBarItem.show();
     } else if (isControllerFile(textEditor)) {
         // From: Controller.php ---> web.php | api.php
