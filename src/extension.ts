@@ -109,6 +109,7 @@ export function activate(context: vscode.ExtensionContext) {
                 // const largeNumbers: vscode.DecorationOptions[] = [];
 
                 let isFound = false;
+                let _str_match: string = "";
                 let match;
                 const regEx: RegExp = /'([a-zA-Z\\]+)\w+(@\w+)?'/g;
                 while (match = regEx.exec(routeFilterStr(text))) {
@@ -126,32 +127,69 @@ export function activate(context: vscode.ExtensionContext) {
                     // vscode.window.showInformationMessage(strResultMatch);
 
                     // progress.report({ increment: 1, message: '...' });
-                    handleRouteToController(strResultMatch, resolve, reject, progress, token)
-                        .then(() => {
-                            //
-                        })
-                        .catch((reason: any) => {
-                            try {
-                                mReject(reason);
-                            } catch (e) {
-                                // Do nothing.
-                            }
-                        })
-                        .finally(() => {
-                            //
-                        });
 
+                    _str_match = strResultMatch;
                     isFound = true;
+
                     break;
                 }
 
-                if (!isFound) {
-                    vscode.window.showInformationMessage(TAG + ' Oops... Current line does not contains controller class name');
-                    reject(new Error('NoMatch'));
+
+                let _pos: number = text.lastIndexOf("@");
+                let _action: string = text.substr(_pos); // "@getUser'..."
+                let _pos_action_end = _action.indexOf("'");
+                _action = _action.substr(0, _pos_action_end);
+                _action = _action.replace("@", "").replace("'", ""); // "getUser"
+                console.log('erlangp: hore', ">>>" + _action + "<<<");
+
+                let _class: string = text.substring(0, _pos);
+                let _pos_class_end: number = _pos;
+                let _pos_class_start: number = _class.lastIndexOf("'");
+                _class = _class.substring(_pos_class_start, _pos_class_end);
+                _class = _class.replace("@", "").replace("'", "");
+                console.log('erlangp: hore', ">>>" + _class + "<<<");
+
+
+                if (isFound) {
+                    handleRouteToController(_str_match, resolve, reject, progress, token).then((myCode: string) => {
+                        console.log('erlangp: myCode: ', myCode);
+
+                        if (myCode === "OK") {
+                            console.log("erlangp: Hore! Found using Method1");
+
+                            progress.report({ increment: 100 });
+                            resolve('ResolveFindingDone');
+                        } else {
+                            // progressParent.report({ message: 'Declaration not found.' });
+                            // setTimeout(function () {
+                            //     progressParent.report({ increment: 100 });
+                            //     resolveParent('ResolveFindingDone');
+                            // }, 3000);
+
+                            progress.report({ message: 'Please wait...' });
+
+                            runMethod2(_class, _action, progress, token, resolve);
+                        }
+                    }).catch((reason: any) => {
+                        try {
+                            mReject(reason);
+                        } catch (e) {
+                            // Do nothing.
+                        }
+                    }).finally(() => {
+                        //
+                    });
+                } else {
+                    // vscode.window.showInformationMessage(TAG + ' Oops... Current line does not contains controller class name');
+                    // reject(new Error('NoMatch'));
 
                     // let progressParent = progress;
                     // progressParent.report({ increment: 100 });
                     // progressParent.report({ message: 'Oops...' });
+
+                    console.log('erlangp: regex not match', '');
+
+                    runMethod2(_class, _action, progress, token, resolve);
                 }
             });
         });
@@ -415,6 +453,87 @@ export function activate(context: vscode.ExtensionContext) {
     }));
 
     updateUiStatusBar();
+}
+
+function runMethod2(_class: string, _action: string, progress: vscode.Progress<{ message?: string | undefined; increment?: number | undefined; }>, token: vscode.CancellationToken, resolve: (value?: string | undefined) => void) {
+    handleRouteToControllerV2(_class, _action, progress, token).then((arrResult) => {
+        // console.log(arrResult);
+        // let arrResult: MyResult[] = [];
+        if (arrResult.length === 1) {
+            for (let i = 0; i < arrResult.length; i++) {
+                const rec: MyResult = arrResult[i];
+
+                let showOptions: vscode.TextDocumentShowOptions = {
+                    viewColumn: undefined,
+                    preserveFocus: false,
+                    preview: true,
+                    selection: new vscode.Range(rec.positionStart, rec.positionEnd),
+                };
+                vscode.window.showTextDocument(rec.uri, showOptions);
+
+                break;
+            }
+        }
+        else if (arrResult.length > 1) {
+            let arrStrPath: string[] = [];
+            for (let x = 0; x < arrResult.length; x++) {
+                const rec = arrResult[x];
+                arrStrPath.push(rec.uri.path);
+            }
+
+            vscode.window.showQuickPick(
+                arrStrPath,
+                {
+                    ignoreFocusOut: true,
+                    canPickMany: false,
+                }
+            ).then((value: string | undefined) => {
+                for (let i = 0; i < arrResult.length; i++) {
+                    const rec: MyResult = arrResult[i];
+
+                    if (value === rec.uri.path) {
+                        let showOptions: vscode.TextDocumentShowOptions = {
+                            viewColumn: undefined,
+                            preserveFocus: false,
+                            preview: true,
+                            selection: new vscode.Range(rec.positionStart, rec.positionEnd),
+                        };
+                        vscode.window.showTextDocument(rec.uri, showOptions);
+
+                        break;
+                    }
+                }
+            }, (reason: any) => {
+                console.log(TAG, 'onRejected:', reason);
+            });
+        }
+
+        progress.report({ increment: 100 });
+        if (arrResult.length > 0) {
+            console.log("erlangp: Hore! Found using Method2");
+
+            resolve('ResolveFindingDone');
+            Promise.resolve(arrResult);
+        }
+        else {
+            progress.report({ message: 'Declaration not found.' });
+            setTimeout(function () {
+                progress.report({ increment: 100 });
+                resolve('ResolveFindingDone');
+            }, 3000);
+        }
+
+        console.log(TAG, 'handleRouteToController: done');
+    }).catch((reason: any) => {
+        try {
+            mReject(reason);
+        }
+        catch (e) {
+            // Do nothing.
+        }
+    }).finally(() => {
+        //
+    });
 }
 
 // This method is called when your extension is deactivated
@@ -1061,13 +1180,113 @@ async function handleUrisControllerToRoute(
     console.log(TAG, 'handleUrisControllerToRoute: done');
 }
 
+async function handleRouteToControllerV2(
+    _class: string,
+    _action: string,
+    progressParent: vscode.Progress<{ message?: string; increment?: number }>,
+    tokenParent: vscode.CancellationToken
+): Promise<MyResult[]> {
+    let strPhpNamespace: string = _class;
+    let strPhpMethodName: string = _action;
+
+    let arrStrPhpNamespace: string[] = strPhpNamespace.split('\\'); // [Api,Some,Other,OneController] or [OneController]
+    let strFilenamePrefix: string = arrStrPhpNamespace[arrStrPhpNamespace.length - 1]; // OneController
+    // vscode.window.showInformationMessage(strFilenamePrefix);
+
+    let arrResult: MyResult[] = [];
+    let uris: vscode.Uri[] = await vscode.workspace.findFiles('**/' + strFilenamePrefix + '.php', '{bootstrap,config,database,node_modules,storage,vendor}/**');
+    for (let i = 0; i < uris.length; i++) {
+        updateProgressMessage(i, uris, progressParent);
+
+        const uri = uris[i];
+        let filePath: string = uri.toString();
+        console.log(TAG, 'Scanning file:', filePath);
+        // vscode.window.showInformationMessage(JSON.stringify(filePath));
+
+        let textDocument: vscode.TextDocument = await vscode.workspace.openTextDocument(uri);
+        // let selection = null;
+        let docText: string = textDocument.getText();
+
+        // 1. Is PHP File?
+        if (docText.indexOf('<?') !== -1) {
+            // OK
+        } else {
+            // Not PHP File
+            // rejectParent(new Error('NotPhpFile'));
+            continue;
+        }
+
+        // 2. Find Namespace
+        let strNamespacePrefix: string = '';
+        let namespacePosition: number = docText.indexOf('namespace App\\Http\\Controllers' + strNamespacePrefix);
+        if (namespacePosition === -1) {
+            // Not Found
+            // rejectParent(new Error('NamespaceNotFound'));
+            continue;
+        }
+
+        // 3. Find Exact Namespace;
+        // Note: In php file will look like: "namespace App\Http\Controllers\Api\Some\Other;"
+        let arrNamespaceWithoutClassName = arrStrPhpNamespace.slice(0, -1); // [Api,Some,Other]
+        let strExtraSeparator: string = '\\';
+        if (arrStrPhpNamespace.length === 1) {
+            strExtraSeparator = ''; // If only classname available
+        }
+        let strFullNamespace = 'namespace App\\Http\\Controllers' + strExtraSeparator + arrNamespaceWithoutClassName.join('\\') + ';';
+        // vscode.window.showInformationMessage(strFullNamespace);
+        let exactNamespacePosition: number = docText.indexOf(strFullNamespace);
+        if (exactNamespacePosition === -1) {
+            // Not Found
+            // rejectParent(new Error('ExactNamespaceNotFound'));
+            continue;
+        }
+
+        // 4. Find Class Name
+        let classNamePosition: number = docText.indexOf('class ' + strFilenamePrefix + ' ');
+        if (classNamePosition === -1) {
+            // Not Found
+            // rejectParent(new Error('ClassNameNotFound'));
+            continue;
+        }
+
+        // 5. Find Method Name
+        // To highlight the class name (Default)
+        let posStart: vscode.Position = textDocument.positionAt(classNamePosition + 'class '.length);
+        let posEnd: vscode.Position = textDocument.positionAt('class '.length + classNamePosition + strPhpMethodName.length);
+        // To highlight the method name
+        if (strPhpMethodName.length > 0) {
+            let methodPosition: number = docText.indexOf(' function ' + strPhpMethodName + '(');
+            // vscode.window.showInformationMessage(JSON.stringify(methodPosition));
+            if (methodPosition === -1) {
+                // Method name Not Found
+                // rejectParent(new Error('MethodNameNotFound'));
+                continue;
+            } else {
+                // Method name Found
+                posStart = textDocument.positionAt(methodPosition + ' function '.length);
+                posEnd = textDocument.positionAt(' function '.length + methodPosition + strPhpMethodName.length);
+            }
+        }
+
+        // vscode.window.showInformationMessage(strPhpNamespace);
+
+        arrResult.push({
+            uri: textDocument.uri,
+            positionStart: posStart,
+            positionEnd: posStart
+        });
+    }
+
+    return Promise.resolve(arrResult);
+}
+
 async function handleRouteToController(
     str: string,
     resolveParent: (value?: string) => void, // To stop progress indicator later
     rejectParent: (reason?: any) => void, // To stop progress indicator later
     progressParent: vscode.Progress<{ message?: string; increment?: number }>,
     tokenParent: vscode.CancellationToken
-) {
+): Promise<string> {
     let strFiltered: string = str.replace(/[,]/g, '')
         .trim()
         .replace(/[\']/g, '')
@@ -1228,19 +1447,11 @@ async function handleRouteToController(
         });
     }
 
-    progressParent.report({ increment: 100 });
     if (arrResult.length > 0) {
-        resolveParent('ResolveFindingDone');
-    } else {
-        progressParent.report({ message: 'Declaration not found.' });
-
-        setTimeout(function () {
-            progressParent.report({ increment: 100 });
-            resolveParent('ResolveFindingDone');
-        }, 3000);
+        return Promise.resolve("OK");
     }
 
-    console.log(TAG, 'handleRouteToController: done');
+    return Promise.resolve("RunMethod2");
 }
 
 function updateProgressMessage(i: number, uris: vscode.Uri[], progressParent: vscode.Progress<{ message?: string | undefined; increment?: number | undefined; }>) {
