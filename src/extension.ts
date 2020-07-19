@@ -665,6 +665,11 @@ async function handleUrisFindBladeUsage(
         resolveParent('ResolveFindingDone');
     } else {
         progressParent.report({ message: 'Declaration not found.' });
+
+        setTimeout(function () {
+            progressParent.report({ increment: 100 });
+            resolveParent('ResolveFindingDone');
+        }, 3000);
     }
 
     console.log(TAG, 'handleUrisFindBladeUsage: done');
@@ -1046,6 +1051,11 @@ async function handleUrisControllerToRoute(
         resolveParent('ResolveFindingDone');
     } else {
         progressParent.report({ message: 'Declaration not found.' });
+
+        setTimeout(function () {
+            progressParent.report({ increment: 100 });
+            resolveParent('ResolveFindingDone');
+        }, 3000);
     }
 
     console.log(TAG, 'handleUrisControllerToRoute: done');
@@ -1223,6 +1233,11 @@ async function handleRouteToController(
         resolveParent('ResolveFindingDone');
     } else {
         progressParent.report({ message: 'Declaration not found.' });
+
+        setTimeout(function () {
+            progressParent.report({ increment: 100 });
+            resolveParent('ResolveFindingDone');
+        }, 3000);
     }
 
     console.log(TAG, 'handleRouteToController: done');
