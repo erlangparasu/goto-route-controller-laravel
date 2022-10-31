@@ -1510,6 +1510,35 @@ function fnParseMethodName(textLine: vscode.TextLine): string {
     return '';
 }
 
+
+// TODO: ? Parse routes format:
+
+// 1
+// Route::get('/user', [UserController::class, 'index']);
+
+// 2
+// Route::get(
+//     '/user/profile',
+//     [UserProfileController::class, 'show']
+// )->name('profile');
+
+// 3
+// Route::controller(OrderController::class)->group(function () {
+//     Route::get('/orders/{id}', 'show');
+//     Route::post('/orders', 'store');
+// });
+
+// 4
+// Route::get('/users/{user}', [UserController::class, 'show']);
+
+// 5
+// Route::get('/locations/{location:slug}', [LocationsController::class, 'show'])
+//         ->name('locations.view')
+//         ->missing(function (Request $request) {
+//             return Redirect::route('locations.index');
+//         });
+
+
 function fnRouteFilterStr(strInput: string): string {
     let offset = strInput.indexOf('Route::', 0);
     if (offset === -1) {
