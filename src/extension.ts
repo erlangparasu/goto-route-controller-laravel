@@ -24,7 +24,7 @@ import * as vscode from 'vscode';
 const TAG = 'EP:';
 let mThenableProgress;
 let mIntervalId: NodeJS.Timeout;
-let mResolve: (value?: string) => void;
+let mResolve: (value: string | PromiseLike<string>) => void;
 let mReject: (reason?: any) => void;
 let mStatusBarItem: vscode.StatusBarItem;
 
@@ -66,7 +66,7 @@ export function activate(context: vscode.ExtensionContext) {
             location: vscode.ProgressLocation.Notification,
             title: 'EP: Finding controller declaration'
         }, (progress: vscode.Progress<{ message?: string; increment?: number }>, token: vscode.CancellationToken) => {
-            return new Promise<string>((resolve: (value?: string) => void, reject: (reason?: any) => void) => {
+            return new Promise<string>((resolve: (value: string | PromiseLike<string>) => void, reject: (reason?: any) => void) => {
                 try {
                     mReject(new Error('CancelProgress'));
                 } catch (e) {
@@ -216,7 +216,7 @@ export function activate(context: vscode.ExtensionContext) {
         mThenableProgress = vscode.window.withProgress(
             progressOptions,
             (progress: vscode.Progress<{ message?: string; increment?: number }>, token: vscode.CancellationToken) => {
-                return new Promise<string>((resolve: (value?: string) => void, reject: (reason?: any) => void) => {
+                return new Promise<string>((resolve: (value: string | PromiseLike<string>) => void, reject: (reason?: any) => void) => {
                     try {
                         mReject(new Error('CancelProgress'));
                     } catch (e) {
@@ -264,7 +264,7 @@ export function activate(context: vscode.ExtensionContext) {
             location: vscode.ProgressLocation.Notification,
             title: 'EP: Finding blade usage'
         }, (progress: vscode.Progress<{ message?: string; increment?: number }>, token: vscode.CancellationToken) => {
-            return new Promise<string>((resolve: (value?: string) => void, reject: (reason?: any) => void) => {
+            return new Promise<string>((resolve: (value: string | PromiseLike<string>) => void, reject: (reason?: any) => void) => {
                 try {
                     mReject(new Error('CancelProgress'));
                 } catch (e) {
@@ -455,7 +455,7 @@ export function activate(context: vscode.ExtensionContext) {
     updateUiStatusBar();
 }
 
-function runMethod2(_class: string, _action: string, progress: vscode.Progress<{ message?: string | undefined; increment?: number | undefined; }>, token: vscode.CancellationToken, resolve: (value?: string | undefined) => void) {
+function runMethod2(_class: string, _action: string, progress: vscode.Progress<{ message?: string | undefined; increment?: number | undefined; }>, token: vscode.CancellationToken, resolve: (value: string | PromiseLike<string>) => void) {
     handleRouteToControllerV2(_class, _action, progress, token).then((arrResult) => {
         // console.log(arrResult);
         // let arrResult: MyResult[] = [];
@@ -641,7 +641,7 @@ async function handleFindBladeUsage(
     textEditor: vscode.TextEditor,
     edit: vscode.TextEditorEdit,
     args: any[],
-    resolveParent: (value?: string) => void,
+    resolveParent: (value: string | PromiseLike<string>) => void,
     rejectParent: (reason?: any) => void,
     progressParent: vscode.Progress<{ message?: string; increment?: number }>,
     tokenParent: vscode.CancellationToken
@@ -655,7 +655,7 @@ async function handleFindBladeUsage(
 async function handleUrisFindBladeUsage(
     uris: vscode.Uri[],
     strToFind: string,
-    resolveParent: (value?: string) => void,
+    resolveParent: (value: string | PromiseLike<string>) => void,
     rejectParent: (reason?: any) => void,
     progressParent: vscode.Progress<{ message?: string; increment?: number }>,
     tokenParent: vscode.CancellationToken
@@ -798,7 +798,7 @@ async function handleControllerToRoute(
     textEditor: vscode.TextEditor,
     edit: vscode.TextEditorEdit,
     args: any[],
-    resolveParent: (value?: string) => void,
+    resolveParent: (value: string | PromiseLike<string>) => void,
     rejectParent: (reason?: any) => void,
     progressParent: vscode.Progress<{ message?: string; increment?: number }>,
     tokenParent: vscode.CancellationToken
@@ -900,7 +900,7 @@ async function handleControllerToRoute(
 async function handleUrisControllerToRoute(
     uris: vscode.Uri[],
     strFullNamespaceWithClassWithMethod: string,
-    resolveParent: (value?: string) => void,
+    resolveParent: (value: string | PromiseLike<string>) => void,
     rejectParent: (reason?: any) => void,
     progressParent: vscode.Progress<{ message?: string; increment?: number }>,
     tokenParent: vscode.CancellationToken
@@ -1282,7 +1282,7 @@ async function handleRouteToControllerV2(
 
 async function handleRouteToController(
     str: string,
-    resolveParent: (value?: string) => void, // To stop progress indicator later
+    resolveParent: (value: string | PromiseLike<string>) => void, // To stop progress indicator later
     rejectParent: (reason?: any) => void, // To stop progress indicator later
     progressParent: vscode.Progress<{ message?: string; increment?: number }>,
     tokenParent: vscode.CancellationToken
