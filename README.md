@@ -42,16 +42,16 @@ or just click **EP-findBladeUsage** on statusbar
 
 | Laravel Version |
 |-----------------|
-| Laravel 7.x |
-| Laravel 6.x |
-| Laravel 5.8 |
-| Laravel 5.7 |
-| Laravel 5.6 |
-| Laravel 5.5 |
-| Laravel 5.4 |
-| Laravel 5.3 |
-| Laravel 5.2 |
-| Laravel 5.1 |
+| 7.x |
+| 6.x |
+| 5.8 |
+| 5.7 |
+| 5.6 |
+| 5.5 |
+| 5.4 |
+| 5.3 |
+| 5.2 |
+| 5.1 |
 
 -----------------------------------------------------------------------------------------------------------
 
