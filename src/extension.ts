@@ -828,7 +828,7 @@ async function handleControllerToRoute(
 
     // 2. Find Namespace
     let strNamespacePrefix: string = '';
-    let namespacePosition: number = docText.indexOf('namespace App\\Http\\Controllers' + strNamespacePrefix);
+    let namespacePosition: number = docText.indexOf('namespace App\\Http\\Controllers' + strNamespacePrefix + '');
     // console.log("TCL: activate -> namespacePosition", namespacePosition)
     if (namespacePosition === -1) {
         // Not Found
@@ -1193,6 +1193,7 @@ async function handleRouteToControllerV2(
     let strFilenamePrefix: string = arrStrPhpNamespace[arrStrPhpNamespace.length - 1]; // OneController
     // vscode.window.showInformationMessage(strFilenamePrefix);
 
+    let errorList: string[] = [];
     let arrResult: MyResult[] = [];
     let uris: vscode.Uri[] = await vscode.workspace.findFiles('**/' + strFilenamePrefix + '.php', '{bootstrap,config,database,node_modules,storage,vendor}/**');
     for (let i = 0; i < uris.length; i++) {
@@ -1213,15 +1214,17 @@ async function handleRouteToControllerV2(
         } else {
             // Not PHP File
             // rejectParent(new Error('NotPhpFile'));
+            errorList.push('NotPhpFile');
             continue;
         }
 
         // 2. Find Namespace
         let strNamespacePrefix: string = '';
-        let namespacePosition: number = docText.indexOf('namespace App\\Http\\Controllers' + strNamespacePrefix);
+        let namespacePosition: number = docText.indexOf('namespace App\\Http\\Controllers' + strNamespacePrefix + '');
         if (namespacePosition === -1) {
             // Not Found
             // rejectParent(new Error('NamespaceNotFound'));
+            errorList.push('NamespaceNotFound');
             continue;
         }
 
@@ -1234,18 +1237,20 @@ async function handleRouteToControllerV2(
         }
         let strFullNamespace = 'namespace App\\Http\\Controllers' + strExtraSeparator + arrNamespaceWithoutClassName.join('\\') + ';';
         // vscode.window.showInformationMessage(strFullNamespace);
-        let exactNamespacePosition: number = docText.indexOf(strFullNamespace);
+        let exactNamespacePosition: number = docText.indexOf('' + strFullNamespace + '');
         if (exactNamespacePosition === -1) {
             // Not Found
             // rejectParent(new Error('ExactNamespaceNotFound'));
+            errorList.push('ExactNamespaceNotFound');
             continue;
         }
 
         // 4. Find Class Name
-        let classNamePosition: number = docText.indexOf('class ' + strFilenamePrefix + ' ');
+        let classNamePosition: number = docText.indexOf('class ' + strFilenamePrefix + '');
         if (classNamePosition === -1) {
             // Not Found
             // rejectParent(new Error('ClassNameNotFound'));
+            errorList.push('ClassNameNotFound');
             continue;
         }
 
@@ -1260,6 +1265,7 @@ async function handleRouteToControllerV2(
             if (methodPosition === -1) {
                 // Method name Not Found
                 // rejectParent(new Error('MethodNameNotFound'));
+                errorList.push('MethodNameNotFound');
                 continue;
             } else {
                 // Method name Found
@@ -1276,6 +1282,10 @@ async function handleRouteToControllerV2(
             positionEnd: posStart
         });
     }
+
+    // if (errorList.length > 0) {
+    //     return Promise.reject(errorList[0]);
+    // }
 
     return Promise.resolve(arrResult);
 }
@@ -1339,7 +1349,7 @@ async function handleRouteToController(
 
         // 2. Find Namespace
         let strNamespacePrefix: string = '';
-        let namespacePosition: number = docText.indexOf('namespace App\\Http\\Controllers' + strNamespacePrefix);
+        let namespacePosition: number = docText.indexOf('namespace App\\Http\\Controllers' + strNamespacePrefix + '');
         if (namespacePosition === -1) {
             // Not Found
             // rejectParent(new Error('NamespaceNotFound'));
@@ -1355,7 +1365,7 @@ async function handleRouteToController(
         }
         let strFullNamespace = 'namespace App\\Http\\Controllers' + strExtraSeparator + arrNamespaceWithoutClassName.join('\\') + ';';
         // vscode.window.showInformationMessage(strFullNamespace);
-        let exactNamespacePosition: number = docText.indexOf(strFullNamespace);
+        let exactNamespacePosition: number = docText.indexOf('' + strFullNamespace + '');
         if (exactNamespacePosition === -1) {
             // Not Found
             // rejectParent(new Error('ExactNamespaceNotFound'));
@@ -1363,7 +1373,7 @@ async function handleRouteToController(
         }
 
         // 4. Find Class Name
-        let classNamePosition: number = docText.indexOf('class ' + strFilenamePrefix + ' ');
+        let classNamePosition: number = docText.indexOf('class ' + strFilenamePrefix + '');
         if (classNamePosition === -1) {
             // Not Found
             // rejectParent(new Error('ClassNameNotFound'));
