@@ -38,6 +38,25 @@ or just click **EP-findBladeUsage** on statusbar
 
 -----------------------------------------------------------------------------------------------------------
 
+## Compatibility
+
+| Laravel Version |
+-------------------
+| Laravel 7.x |
+| Laravel 6.x |
+| Laravel 5.8 |
+| Laravel 5.7 |
+| Laravel 5.6 |
+| Laravel 5.5 |
+| Laravel 5.4 |
+| Laravel 5.3 |
+| Laravel 5.2 |
+| Laravel 5.1 |
+
+-----------------------------------------------------------------------------------------------------------
+
+## Links
+
 Extension:
 https://marketplace.visualstudio.com/items?itemName=erlangparasu.goto-route-controller-laravel
 
