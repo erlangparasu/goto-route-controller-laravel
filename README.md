@@ -42,7 +42,7 @@ Extension:
 https://marketplace.visualstudio.com/items?itemName=erlangparasu.goto-route-controller-laravel
 
 Source:
-https://gitlab.com/erlangparasu/goto-route-controller-laravel
+https://github.com/erlangparasu/goto-route-controller-laravel
 
 -----------------------------------------------------------------------------------------------------------
 

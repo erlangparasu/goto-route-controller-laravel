@@ -10,11 +10,11 @@
         "Other"
     ],
     "publisher": "erlangparasu",
-    "homepage": "https://gitlab.com/erlangparasu/goto-route-controller-laravel/blob/master/README.md",
+    "homepage": "https://github.com/erlangparasu/goto-route-controller-laravel/blob/master/README.md",
     "license": "Apache-2.0",
     "repository": {
         "type": "git",
-        "url": "https://gitlab.com/erlangparasu/goto-route-controller-laravel"
+        "url": "https://github.com/erlangparasu/goto-route-controller-laravel"
     },
     "activationEvents": [
         "workspaceContains:**/artisan",
