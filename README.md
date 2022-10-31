@@ -41,7 +41,7 @@ or just click **EP-findBladeUsage** on statusbar
 ## Compatibility
 
 | Laravel Version |
--------------------
+|-----------------|
 | Laravel 7.x |
 | Laravel 6.x |
 | Laravel 5.8 |
