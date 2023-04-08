@@ -138,7 +138,7 @@ export function activate(context: vscode.ExtensionContext) {
                     break;
                 }
 
-                /// BEGIN
+                /// BEGIN Parse.
                 let temp_location_summ = {
                     found: false,
                     summ_klass_parts: [""],
@@ -190,8 +190,95 @@ export function activate(context: vscode.ExtensionContext) {
                 }
 
                 console.log({ temp_location_summ: temp_location_summ });
-                /// END
+                /// END Parse.
 
+                /// BEGIN Find controller file based on temp_location_summ.
+                try {
+                    fnFindAndOpenControllerFile(
+                        temp_location_summ,
+                        progress,
+                        token,
+                    ).then((arrResult) => {
+                        // console.log('fnFindAndOpenControllerFile:', arrResult);
+                        // let arrResult: MyResult[] = [];
+                        if (arrResult.length === 1) {
+                            for (let i = 0; i < arrResult.length; i++) {
+                                const rec: MyResult = arrResult[i];
+
+                                let showOptions: vscode.TextDocumentShowOptions = {
+                                    viewColumn: undefined,
+                                    preserveFocus: false,
+                                    preview: true,
+                                    selection: new vscode.Range(rec.positionStart, rec.positionEnd),
+                                };
+                                vscode.window.showTextDocument(rec.uri, showOptions);
+
+                                break;
+                            }
+                        }
+                        else if (arrResult.length > 1) {
+                            let arrStrPath: string[] = [];
+                            for (let x = 0; x < arrResult.length; x++) {
+                                const rec = arrResult[x];
+                                arrStrPath.push(rec.uri.path);
+                            }
+
+                            vscode.window.showQuickPick(
+                                arrStrPath,
+                                {
+                                    ignoreFocusOut: true,
+                                    canPickMany: false,
+                                }
+                            ).then((value: string | undefined) => {
+                                for (let i = 0; i < arrResult.length; i++) {
+                                    const rec: MyResult = arrResult[i];
+
+                                    if (value === rec.uri.path) {
+                                        let showOptions: vscode.TextDocumentShowOptions = {
+                                            viewColumn: undefined,
+                                            preserveFocus: false,
+                                            preview: true,
+                                            selection: new vscode.Range(rec.positionStart, rec.positionEnd),
+                                        };
+                                        vscode.window.showTextDocument(rec.uri, showOptions);
+
+                                        break;
+                                    }
+                                }
+                            }, (reason: any) => {
+                                console.log('fnFindAndOpenControllerFile:', 'onRejected:', reason);
+                            });
+                        }
+
+                        progress.report({ increment: 100 });
+                        if (arrResult.length > 0) {
+                            console.log('fnFindAndOpenControllerFile:', "erlangp: Hore! Found using Method3");
+
+                            resolve('ResolveFindingDone');
+                            Promise.resolve(arrResult);
+                        }
+                        else {
+                            progress.report({ message: 'Declaration not found. [1]' });
+                            setTimeout(function () {
+                                progress.report({ increment: 100 });
+                                resolve('ResolveFindingDone');
+                            }, 3000);
+                        }
+
+                        console.log('fnFindAndOpenControllerFile:', 'done');
+                    }).catch((reason: any) => {
+                        console.error('fnFindAndOpenControllerFile:', { reason });
+                        fnOtherWay();
+                    }).finally(() => {
+                        //
+                    });
+                } catch (error) {
+                    console.error('fnFindAndOpenControllerFile:', { error });
+                    fnOtherWay();
+                }
+                /// END Find.
+
+                function fnOtherWay() {
                 let _pos: number = text.lastIndexOf("@");
                 let _action: string = text.substr(_pos); // "@getUser'..."
                 let _pos_action_end = _action.indexOf("'");
@@ -205,7 +292,6 @@ export function activate(context: vscode.ExtensionContext) {
                 _class = _class.substring(_pos_class_start, _pos_class_end);
                 _class = _class.replace("@", "").replace("'", "");
                 console.log('erlangp: hore', ">>>" + _class + "<<<");
-
 
                 if (isFound) {
                     fnHandleRouteToController(_str_match, resolve, reject, progress, token).then((myCode: string) => {
@@ -248,6 +334,7 @@ export function activate(context: vscode.ExtensionContext) {
 
                     fnRunMethod2(_class, _action, progress, token, resolve);
                 }
+                };
             });
         });
 
@@ -1642,3 +1729,122 @@ function fnFullColorHex(r: number, g: number, b: number) {
 function fnFullColorHexWithHash(r: number, g: number, b: number) {
     return "#" + fnFullColorHex(r, g, b);
 };
+
+async function fnFindAndOpenControllerFile(
+    summ: any,
+    progressParent: vscode.Progress<{ message?: string; increment?: number }>,
+    tokenParent: vscode.CancellationToken
+): Promise<MyResult[]> {
+    // vscode.window.showInformationMessage(strFilenamePrefix);
+
+    /// Structure
+    // let summ = {
+    //     found: false,
+    //     summ_klass_parts: [""],
+    //     summ_klass_name: "",
+    //     summ_action: "",
+    //     use: {},
+    //     route: {},
+    // };
+
+    let strPhpMethodName = summ.summ_action;
+
+    let errorList: string[] = [];
+    let arrResult: MyResult[] = [];
+    let uris: vscode.Uri[] = await vscode.workspace.findFiles('**/' + summ.summ_klass_name + '.php', '{bootstrap,config,database,node_modules,storage,vendor}/**');
+    for (let i = 0; i < uris.length; i++) {
+        fnUpdateProgressMessage(i, uris, progressParent);
+
+        const uri = uris[i];
+        let filePath: string = uri.toString();
+        console.log(TAG, 'Scanning file:', filePath);
+        // vscode.window.showInformationMessage(JSON.stringify(filePath));
+
+        let textDocument: vscode.TextDocument = await vscode.workspace.openTextDocument(uri);
+        // let selection = null;
+        let docText: string = textDocument.getText();
+
+        // 1. Is PHP File?
+        if (docText.indexOf('<?') !== -1) {
+            // OK
+        } else {
+            // Not PHP File
+            // rejectParent(new Error('NotPhpFile'));
+            errorList.push('NotPhpFile');
+            continue;
+        }
+
+        // 2. Find Namespace
+        let strNamespacePrefix: string = '';
+        let namespacePosition: number = docText.indexOf('namespace App\\Http\\Controllers' + strNamespacePrefix + '');
+        if (namespacePosition === -1) {
+            // Not Found
+            // rejectParent(new Error('NamespaceNotFound'));
+            errorList.push('NamespaceNotFound');
+            continue;
+        }
+
+        // 3. Find Exact Namespace;
+        // Note: In php file will look like: "namespace App\Http\Controllers\Api\Some\Other;"
+        let arrNamespaceWithoutClassName = summ.summ_klass_parts.slice(0, -1); // [App,Api,Some,Other]
+        let strExtraSeparator: string = '\\';
+        if (summ.summ_klass_parts.length === 1) {
+            strExtraSeparator = ''; // If only classname available
+        }
+        if (summ.summ_klass_parts[0] == 'App') {
+            strExtraSeparator = ''; // If fully path
+        }
+        let strFullNamespace = 'namespace ' + strExtraSeparator + arrNamespaceWithoutClassName.join('\\') + ';';
+        // vscode.window.showInformationMessage(strFullNamespace);
+        let exactNamespacePosition: number = docText.indexOf('' + strFullNamespace + '');
+        if (exactNamespacePosition === -1) {
+            // Not Found
+            // rejectParent(new Error('ExactNamespaceNotFound'));
+            errorList.push('ExactNamespaceNotFound');
+            continue;
+        }
+
+        // 4. Find Class Name
+        let classNamePosition: number = docText.indexOf('class ' + summ.summ_klass_name + '');
+        if (classNamePosition === -1) {
+            // Not Found
+            // rejectParent(new Error('ClassNameNotFound'));
+            errorList.push('ClassNameNotFound');
+            continue;
+        }
+
+        // 5. Find Method Name
+        // To highlight the class name (Default)
+        let posStart: vscode.Position = textDocument.positionAt(classNamePosition + 'class '.length);
+        let posEnd: vscode.Position = textDocument.positionAt('class '.length + classNamePosition + strPhpMethodName.length);
+        // To highlight the method name
+        if (strPhpMethodName.length > 0) {
+            let methodPosition: number = docText.indexOf(' function ' + strPhpMethodName + '(');
+            // vscode.window.showInformationMessage(JSON.stringify(methodPosition));
+            if (methodPosition === -1) {
+                // Method name Not Found
+                // rejectParent(new Error('MethodNameNotFound'));
+                errorList.push('MethodNameNotFound');
+                continue;
+            } else {
+                // Method name Found
+                posStart = textDocument.positionAt(methodPosition + ' function '.length);
+                posEnd = textDocument.positionAt(' function '.length + methodPosition + strPhpMethodName.length);
+            }
+        }
+
+        // vscode.window.showInformationMessage(strPhpNamespace);
+
+        arrResult.push({
+            uri: textDocument.uri,
+            positionStart: posStart,
+            positionEnd: posStart
+        });
+    }
+
+    // if (errorList.length > 0) {
+    //     return Promise.reject(errorList[0]);
+    // }
+
+    return Promise.resolve(arrResult);
+}
