@@ -1,3 +1,5 @@
+"use strict";
+
 export function fnTryParseRouteVer8(text: string) {
     // throw new Error('Function not implemented.');
 

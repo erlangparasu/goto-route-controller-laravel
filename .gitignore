@@ -2,4 +2,4 @@ out
 node_modules
 .vscode-test/
 *.vsix
-src/test/lines_for_test.ts
+src/test/data/sample_input_texts_for_test.ts

@@ -1,5 +1,7 @@
+"use strict";
+
 import { fnTryParseRouteVer8 } from "../route_parser_ver8";
-import { test_inputs } from "./lines_for_test";
+import { kInputTexts } from "./data/sample_input_texts_for_test";
 
 function test1() {
     let input_line = "Route::get('orders/index', [App\\Http\\Controllers\\OrderController::class,'index'])->name('orders.index');"
@@ -26,9 +28,9 @@ function test4() {
 }
 
 function run_bulk_tests() {
-    for (let index = 0; index < test_inputs.length; index++) {
+    for (let index = 0; index < kInputTexts.length; index++) {
         console.log('runTest' + index + '');
-        const input_line = test_inputs[index];
+        const input_line = kInputTexts[index];
         let [data, error] = fnTryParseRouteVer8(input_line);
         if (null != error) {
             console.error('test' + index + 'Failed=', { input_line }, { data }, { error });
