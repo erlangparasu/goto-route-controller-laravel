@@ -20,7 +20,8 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
-import * as appParser from './route_parser_ver8';
+import * as appRouteParser from './route_parser_ver8';
+import * as appUseImportParser from './use_import_parser_ver8';
 
 const TAG = 'EP:';
 
@@ -38,6 +39,7 @@ interface MyResult {
 
 // This method is called when your extension is activated
 // your extension is activated the very first time the command is executed
+/// Created by: Erlang Parasu 2023.
 export function activate(context: vscode.ExtensionContext) {
 
     // Use the console to output diagnostic information (console.log) and errors (console.error)
@@ -136,9 +138,59 @@ export function activate(context: vscode.ExtensionContext) {
                     break;
                 }
 
-                // console.log(
-                //     appParser.fnTryParseRouteVer8(text)
-                // );
+                /// BEGIN
+                let temp_location_summ = {
+                    found: false,
+                    summ_klass_parts: [""],
+                    summ_klass_name: "",
+                    summ_action: "",
+                    use: {},
+                    route: {},
+                };
+                try {
+                    let [parsed_route, error] = appRouteParser.fnTryParseRouteVer8(text);
+                    console.log('route_parser=',);
+                    if (null != parsed_route) {
+                        let [results, err2] = appUseImportParser.fnTryParseUseImportVer8(
+                            textEditor.document.getText()
+                        );
+                        console.log('use_import_parser=',);
+                        if (null != results) {
+                            for (let index = 0; index < results.length; index++) {
+                                const parsed_use = results[index];
+
+                                if (parsed_route instanceof Error) {
+                                    continue;
+                                }
+                                if (parsed_use instanceof Error) {
+                                    continue;
+                                }
+
+                                if (null == parsed_route.use_class_name) {
+                                    continue;
+                                }
+                                if (null == parsed_use.useable_class_name) {
+                                    continue;
+                                }
+
+                                if (parsed_route.use_class_name == parsed_use.useable_class_name) {
+                                    temp_location_summ.found = true;
+                                    temp_location_summ.use = parsed_use;
+                                    temp_location_summ.route = parsed_route;
+                                    temp_location_summ.summ_klass_parts = parsed_use.class_parts;
+                                    temp_location_summ.summ_klass_name = parsed_use.useable_class_name;
+                                    temp_location_summ.summ_action = parsed_route.action;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.error('parsing_error=', { error });
+                }
+
+                console.log({ temp_location_summ: temp_location_summ });
+                /// END
 
                 let _pos: number = text.lastIndexOf("@");
                 let _action: string = text.substr(_pos); // "@getUser'..."

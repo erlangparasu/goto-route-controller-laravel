@@ -170,6 +170,7 @@ export function fnTryParseRouteVer8(text: string) {
         class: class_text,
         class_dot: class_dot,
         class_parts: klass_parts,
+        use_class_name: klass_parts[klass_parts.length - 1],
         action: action_text,
     };
     // console.log({ data });

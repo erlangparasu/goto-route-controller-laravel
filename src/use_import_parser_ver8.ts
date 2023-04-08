@@ -16,10 +16,19 @@ export function fnTryParseUseImportVer8(text: string) {
     }
     // console.log({ filtered_lines });
 
+    let results = [];
     for (let index = 0; index < filtered_lines.length; index++) {
         const line = filtered_lines[index];
-        fnTryParseLine(line);
+        let [data, error] = fnTryParseLine(line);
+        if (data != null) {
+            results.push(data);
+        }
     }
+
+    return [
+        results,
+        null,
+    ];
 }
 
 function fnTryParseLine(text: string) {

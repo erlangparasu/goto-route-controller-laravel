@@ -37,7 +37,7 @@ function run_bulk_tests() {
         if (null != error) {
             console.error('test' + index + 'Failed=', { input_line }, { data }, { error });
         } else {
-            console.error('test' + index + 'Success=', { input_line }, { data }, { error });
+            console.log('test' + index + 'Success=', { input_line }, { data }, { error });
         }
     }
 }
