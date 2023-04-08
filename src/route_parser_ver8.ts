@@ -82,13 +82,15 @@ export function fnTryParseRouteVer8(text: string) {
     // console.log({ words });
 
     let class_text: string = words[0];
-    // console.log({ class_text });
     let action_text: string = words[1];
-    console.log({ action_text });
+    // console.log({ class_text });
+    // console.log({ action_text });
 
     // Trim
     class_text = class_text.trim();
     action_text = action_text.trim();
+    // console.log({ class_text });
+    // console.log({ action_text });
 
     /// ACTION
 
@@ -174,32 +176,3 @@ export function fnTryParseRouteVer8(text: string) {
         null,
     ];
 }
-
-function test1() {
-    let input_line = "Route::get('orders/index', [App\\Http\\Controllers\\OrderController::class,'index'])->name('orders.index');"
-    let [data, error] = fnTryParseRouteVer8(input_line);
-    console.log('test1=', { data }, { error });
-}
-
-function test2() {
-    let input_line = "Route::get('/user', [UserController::class, 'index']);"
-    let [data, error] = fnTryParseRouteVer8(input_line);
-    console.log('test2=', { data }, { error });
-}
-
-function test3() {
-    let input_line = "Route::get(  '/user'  ,  [  UserController::class  ,  'index'  ]   )  ;  "
-    let [data, error] = fnTryParseRouteVer8(input_line);
-    console.log('test3=', { data }, { error });
-}
-
-function test4() {
-    let input_line = "Route::get('orders/index', [\\App\\Http\\Controllers\\OrderController::class,'index'])->name('orders.index');"
-    let [data, error] = fnTryParseRouteVer8(input_line);
-    console.log('test4=', { data }, { error });
-}
-
-test1();
-test2();
-test3();
-test4();
