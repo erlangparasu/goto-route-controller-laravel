@@ -3,3 +3,4 @@ node_modules
 .vscode-test/
 *.vsix
 src/test/data/sample_input_texts_for_test.ts
+src/test/data/sample_use_import_for_test.ts
