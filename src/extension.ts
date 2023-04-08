@@ -20,6 +20,7 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
+import * as appParser from './route_parser_ver8';
 
 const TAG = 'EP:';
 
@@ -135,6 +136,9 @@ export function activate(context: vscode.ExtensionContext) {
                     break;
                 }
 
+                // console.log(
+                //     appParser.fnTryParseRouteVer8(text)
+                // );
 
                 let _pos: number = text.lastIndexOf("@");
                 let _action: string = text.substr(_pos); // "@getUser'..."
