@@ -279,61 +279,61 @@ export function activate(context: vscode.ExtensionContext) {
                 /// END Find.
 
                 function fnOtherWay() {
-                let _pos: number = text.lastIndexOf("@");
-                let _action: string = text.substr(_pos); // "@getUser'..."
-                let _pos_action_end = _action.indexOf("'");
-                _action = _action.substr(0, _pos_action_end);
-                _action = _action.replace("@", "").replace("'", ""); // "getUser"
-                console.log('erlangp: hore', ">>>" + _action + "<<<");
+                    let _pos: number = text.lastIndexOf("@");
+                    let _action: string = text.substring(_pos); // "@getUser'..."
+                    let _pos_action_end = _action.indexOf("'");
+                    _action = _action.substring(0, _pos_action_end);
+                    _action = _action.replace("@", "").replace("'", ""); // "getUser"
+                    console.log('erlangp: hore', ">>>" + _action + "<<<");
 
-                let _class: string = text.substring(0, _pos);
-                let _pos_class_end: number = _pos;
-                let _pos_class_start: number = _class.lastIndexOf("'");
-                _class = _class.substring(_pos_class_start, _pos_class_end);
-                _class = _class.replace("@", "").replace("'", "");
-                console.log('erlangp: hore', ">>>" + _class + "<<<");
+                    let _class: string = text.substring(0, _pos);
+                    let _pos_class_end: number = _pos;
+                    let _pos_class_start: number = _class.lastIndexOf("'");
+                    _class = _class.substring(_pos_class_start, _pos_class_end);
+                    _class = _class.replace("@", "").replace("'", "");
+                    console.log('erlangp: hore', ">>>" + _class + "<<<");
 
-                if (isFound) {
-                    fnHandleRouteToController(_str_match, resolve, reject, progress, token).then((myCode: string) => {
-                        console.log('erlangp: myCode: ', myCode);
+                    if (isFound) {
+                        fnHandleRouteToController(_str_match, resolve, reject, progress, token).then((myCode: string) => {
+                            console.log('erlangp: myCode: ', myCode);
 
-                        if (myCode === "OK") {
-                            console.log("erlangp: Hore! Found using Method1");
+                            if (myCode === "OK") {
+                                console.log("erlangp: Hore! Found using Method1");
 
-                            progress.report({ increment: 100 });
-                            resolve('ResolveFindingDone');
-                        } else {
-                            // progressParent.report({ message: 'Declaration not found.' });
-                            // setTimeout(function () {
-                            //     progressParent.report({ increment: 100 });
-                            //     resolveParent('ResolveFindingDone');
-                            // }, 3000);
+                                progress.report({ increment: 100 });
+                                resolve('ResolveFindingDone');
+                            } else {
+                                // progressParent.report({ message: 'Declaration not found.' });
+                                // setTimeout(function () {
+                                //     progressParent.report({ increment: 100 });
+                                //     resolveParent('ResolveFindingDone');
+                                // }, 3000);
 
-                            progress.report({ message: 'Please wait...' });
+                                progress.report({ message: 'Please wait...' });
 
-                            fnRunMethod2(_class, _action, progress, token, resolve);
-                        }
-                    }).catch((reason: any) => {
-                        try {
-                            mReject(reason);
-                        } catch (e) {
-                            // Do nothing.
-                        }
-                    }).finally(() => {
-                        //
-                    });
-                } else {
-                    // vscode.window.showInformationMessage(TAG + ' Oops... Current line does not contains controller class name');
-                    // reject(new Error('NoMatch'));
+                                fnRunMethod2(_class, _action, progress, token, resolve);
+                            }
+                        }).catch((reason: any) => {
+                            try {
+                                mReject(reason);
+                            } catch (e) {
+                                // Do nothing.
+                            }
+                        }).finally(() => {
+                            //
+                        });
+                    } else {
+                        // vscode.window.showInformationMessage(TAG + ' Oops... Current line does not contains controller class name');
+                        // reject(new Error('NoMatch'));
 
-                    // let progressParent = progress;
-                    // progressParent.report({ increment: 100 });
-                    // progressParent.report({ message: 'Oops...' });
+                        // let progressParent = progress;
+                        // progressParent.report({ increment: 100 });
+                        // progressParent.report({ message: 'Oops...' });
 
-                    console.log('erlangp: regex not match', '');
+                        console.log('erlangp: regex not match', '');
 
-                    fnRunMethod2(_class, _action, progress, token, resolve);
-                }
+                        fnRunMethod2(_class, _action, progress, token, resolve);
+                    }
                 };
             });
         });
