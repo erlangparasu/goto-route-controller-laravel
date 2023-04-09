@@ -246,13 +246,13 @@ export function activate(context: vscode.ExtensionContext) {
                                     }
                                 }
                             }, (reason: any) => {
-                                console.log('fnFindAndOpenControllerFile:', 'onRejected:', reason);
+                                console.log('fnFindAndOpenControllerFile:', 'onRejected:', { reason });
                             });
                         }
 
                         progress.report({ increment: 100 });
                         if (arrResult.length > 0) {
-                            console.log('fnFindAndOpenControllerFile:', "erlangp: Hore! Found using Method3");
+                            console.log('fnFindAndOpenControllerFile:', "arrResult.length > 0");
 
                             resolve('ResolveFindingDone');
                             Promise.resolve(arrResult);
@@ -268,63 +268,147 @@ export function activate(context: vscode.ExtensionContext) {
                         console.log('fnFindAndOpenControllerFile:', 'done');
                     }).catch((reason: any) => {
                         console.error('fnFindAndOpenControllerFile:', { reason });
-                        fnOtherWay();
+                        _fnOtherWayVer8FullPathController();
                     }).finally(() => {
                         //
                     });
                 } catch (error) {
                     console.error('fnFindAndOpenControllerFile:', { error });
-                    fnOtherWay();
+                    _fnOtherWayVer8FullPathController();
                 }
                 /// END Find.
 
-                /////////////////////////////////////////////////////
+                function _fnOtherWayVer8FullPathController() {
+                    /// BEGIN Parse route that contains full path controller.
+                    let fullpathctr_location_summ = {
+                        found: false,
+                        is_class_path_absolute: false,
+                        class: "",
+                        class_dot: "",
+                        class_parts: [""],
+                        use_class_name: "",
+                        action: "",
+                    };
+                    try {
+                        let [parsed_route, error] = appRouteParser.fnTryParseRouteVer8(text);
+                        console.log('route_parser=');
+                        if (null != parsed_route) {
+                            if (parsed_route instanceof Error) {
+                                throw new Error("");
+                            }
 
-                /// BEGIN Parse route that contains full path controller.
-                let fullpathctr_location_summ = {
-                    found: false,
-                    is_class_path_absolute: false,
-                    class: "",
-                    class_dot: "",
-                    class_parts: [""],
-                    use_class_name: "",
-                    action: "",
-                };
-                try {
-                    let [parsed_route, error] = appRouteParser.fnTryParseRouteVer8(text);
-                    console.log('route_parser=');
-                    if (null != parsed_route) {
-                        if (parsed_route instanceof Error) {
-                            throw new Error("");
+                            // parsed_route: {
+                            //     is_class_path_absolute: boolean;
+                            //     class: string;
+                            //     class_dot: string;
+                            //     class_parts: string[];
+                            //     use_class_name: string;
+                            //     action: string;
+                            // }
+
+                            fullpathctr_location_summ.found = true;
+                            fullpathctr_location_summ.is_class_path_absolute = parsed_route.is_class_path_absolute;
+                            fullpathctr_location_summ.class = parsed_route.class;
+                            fullpathctr_location_summ.class_dot = parsed_route.class_dot;
+                            fullpathctr_location_summ.class_parts = parsed_route.class_parts;
+                            fullpathctr_location_summ.use_class_name = parsed_route.use_class_name;
+                            fullpathctr_location_summ.action = parsed_route.action;
                         }
-
-                        // parsed_route: {
-                        //     is_class_path_absolute: boolean;
-                        //     class: string;
-                        //     class_dot: string;
-                        //     class_parts: string[];
-                        //     use_class_name: string;
-                        //     action: string;
-                        // }
-
-                        fullpathctr_location_summ.found = true;
-                        fullpathctr_location_summ.is_class_path_absolute = parsed_route.is_class_path_absolute;
-                        fullpathctr_location_summ.class = parsed_route.class;
-                        fullpathctr_location_summ.class_dot = parsed_route.class_dot;
-                        fullpathctr_location_summ.class_parts = parsed_route.class_parts;
-                        fullpathctr_location_summ.use_class_name = parsed_route.use_class_name;
-                        fullpathctr_location_summ.action = parsed_route.action;
+                    } catch (error) {
+                        console.error('parsing_error=', { error });
                     }
-                } catch (error) {
-                    console.error('parsing_error=', { error });
+
+                    console.log({ fullpathctr_location_summ });
+                    /// END Parse route that contains full path controller.
+
+                    /// BEGIN Find controller file based on fullpathctr_location_summ.
+                    try {
+                        fnFindAndOpenFullPathControllerFile(
+                            fullpathctr_location_summ,
+                            progress,
+                            token,
+                        ).then((arrResult) => {
+                            // console.log('fnFindAndOpenControllerFile:', arrResult);
+                            // let arrResult: MyResult[] = [];
+                            if (arrResult.length === 1) {
+                                for (let i = 0; i < arrResult.length; i++) {
+                                    const rec: MyResult = arrResult[i];
+
+                                    let showOptions: vscode.TextDocumentShowOptions = {
+                                        viewColumn: undefined,
+                                        preserveFocus: false,
+                                        preview: true,
+                                        selection: new vscode.Range(rec.positionStart, rec.positionEnd),
+                                    };
+                                    vscode.window.showTextDocument(rec.uri, showOptions);
+
+                                    break;
+                                }
+                            }
+                            else if (arrResult.length > 1) {
+                                let arrStrPath: string[] = [];
+                                for (let x = 0; x < arrResult.length; x++) {
+                                    const rec = arrResult[x];
+                                    arrStrPath.push(rec.uri.path);
+                                }
+
+                                vscode.window.showQuickPick(
+                                    arrStrPath,
+                                    {
+                                        ignoreFocusOut: true,
+                                        canPickMany: false,
+                                    }
+                                ).then((value: string | undefined) => {
+                                    for (let i = 0; i < arrResult.length; i++) {
+                                        const rec: MyResult = arrResult[i];
+
+                                        if (value === rec.uri.path) {
+                                            let showOptions: vscode.TextDocumentShowOptions = {
+                                                viewColumn: undefined,
+                                                preserveFocus: false,
+                                                preview: true,
+                                                selection: new vscode.Range(rec.positionStart, rec.positionEnd),
+                                            };
+                                            vscode.window.showTextDocument(rec.uri, showOptions);
+
+                                            break;
+                                        }
+                                    }
+                                }, (reason: any) => {
+                                    console.log('fnFindAndOpenFullPathControllerFile:', 'onRejected:', reason);
+                                });
+                            }
+
+                            progress.report({ increment: 100 });
+                            if (arrResult.length > 0) {
+                                console.log('fnFindAndOpenFullPathControllerFile:', "erlangp: Hore! Found using Method3");
+
+                                resolve('ResolveFindingDone');
+                                Promise.resolve(arrResult);
+                            }
+                            else {
+                                progress.report({ message: 'Declaration not found. [1]' });
+                                setTimeout(function () {
+                                    progress.report({ increment: 100 });
+                                    resolve('ResolveFindingDone');
+                                }, 3000);
+                            }
+
+                            console.log('fnFindAndOpenFullPathControllerFile:', 'done');
+                        }).catch((reason: any) => {
+                            console.error('fnFindAndOpenFullPathControllerFile:', { reason });
+                            _fnOtherWayVer1();
+                        }).finally(() => {
+                            //
+                        });
+                    } catch (error) {
+                        console.error('fnFindAndOpenFullPathControllerFile:', { error });
+                        _fnOtherWayVer1();
+                    }
+                    /// END Find controller file based on fullpathctr_location_summ.
                 }
 
-                console.log({ fullpathctr_location_summ });
-                /// END Parse route that contains full path controller.
-
-                /////////////////////////////////////////////////////
-
-                function fnOtherWay() {
+                function _fnOtherWayVer1() {
                     let _pos: number = text.lastIndexOf("@");
                     let _action: string = text.substring(_pos); // "@getUser'..."
                     let _pos_action_end = _action.indexOf("'");
@@ -2220,6 +2304,11 @@ async function fnFindAndOpenControllerFile(
     let errorList: string[] = [];
     let arrResult: MyResult[] = [];
     let uris: vscode.Uri[] = await vscode.workspace.findFiles('**/' + summ.summ_klass_name + '.php', '{bootstrap,config,database,node_modules,storage,vendor}/**');
+
+    if (uris.length == 0) {
+        return Promise.reject(new Error('local.NoControllerFileFound'));
+    }
+
     for (let i = 0; i < uris.length; i++) {
         fnUpdateProgressMessage(i, uris, progressParent);
 
@@ -2310,9 +2399,136 @@ async function fnFindAndOpenControllerFile(
         });
     }
 
-    // if (errorList.length > 0) {
-    //     return Promise.reject(errorList[0]);
-    // }
+    if (arrResult.length === 0) {
+        if (errorList.length > 0) {
+            return Promise.reject(errorList[0]);
+        }
+    }
+
+    return Promise.resolve(arrResult);
+}
+
+async function fnFindAndOpenFullPathControllerFile(
+    summ: any,
+    progressParent: vscode.Progress<{ message?: string; increment?: number }>,
+    tokenParent: vscode.CancellationToken
+): Promise<MyResult[]> {
+    // vscode.window.showInformationMessage(strFilenamePrefix);
+
+    /// Structure
+    // fullpathctr_location_summ.found
+    // fullpathctr_location_summ.is_class_path_absolute
+    // fullpathctr_location_summ.class
+    // fullpathctr_location_summ.class_dot
+    // fullpathctr_location_summ.class_parts
+    // fullpathctr_location_summ.use_class_name
+    // fullpathctr_location_summ.action
+
+    let abcKlassName = summ.use_class_name;
+    let strPhpMethodName = summ.action;
+
+    let errorList: string[] = [];
+    let arrResult: MyResult[] = [];
+    let uris: vscode.Uri[] = await vscode.workspace.findFiles('**/' + abcKlassName + '.php', '{bootstrap,config,database,node_modules,storage,vendor}/**');
+    if (uris.length === 0) {
+        return Promise.reject(new Error('local.NoControllerFileFound'));
+    }
+
+    for (let i = 0; i < uris.length; i++) {
+        fnUpdateProgressMessage(i, uris, progressParent);
+
+        const uri = uris[i];
+        let filePath: string = uri.toString();
+        console.log(TAG, 'Scanning file:', filePath);
+        // vscode.window.showInformationMessage(JSON.stringify(filePath));
+
+        let textDocument: vscode.TextDocument = await vscode.workspace.openTextDocument(uri);
+        // let selection = null;
+        let docText: string = textDocument.getText();
+
+        // 1. Is PHP File?
+        if (docText.indexOf('<?') !== -1) {
+            // OK
+        } else {
+            // Not PHP File
+            // rejectParent(new Error('NotPhpFile'));
+            errorList.push('NotPhpFile');
+            continue;
+        }
+
+        // 2. Find Namespace
+        let strNamespacePrefix: string = '';
+        let namespacePosition: number = docText.indexOf('namespace App\\Http\\Controllers' + strNamespacePrefix + '');
+        if (namespacePosition === -1) {
+            // Not Found
+            // rejectParent(new Error('NamespaceNotFound'));
+            errorList.push('NamespaceNotFound');
+            continue;
+        }
+
+        // 3. Find Exact Namespace;
+        // Note: In php file will look like: "namespace App\Http\Controllers\Api\Some\Other;"
+        let arrNamespaceWithoutClassName = summ.class_parts.slice(0, -1); // [App,Api,Some,Other]
+        let strExtraSeparator: string = '\\';
+        if (summ.class_parts.length === 1) {
+            strExtraSeparator = ''; // If only classname available
+        }
+        if (summ.class_parts[0] == 'App') {
+            strExtraSeparator = ''; // If fully path
+        }
+        let strFullNamespace = 'namespace ' + strExtraSeparator + arrNamespaceWithoutClassName.join('\\') + ';';
+        // vscode.window.showInformationMessage(strFullNamespace);
+        let exactNamespacePosition: number = docText.indexOf('' + strFullNamespace + '');
+        if (exactNamespacePosition === -1) {
+            // Not Found
+            // rejectParent(new Error('ExactNamespaceNotFound'));
+            errorList.push('ExactNamespaceNotFound');
+            continue;
+        }
+
+        // 4. Find Class Name
+        let classNamePosition: number = docText.indexOf('class ' + abcKlassName + '');
+        if (classNamePosition === -1) {
+            // Not Found
+            // rejectParent(new Error('ClassNameNotFound'));
+            errorList.push('ClassNameNotFound');
+            continue;
+        }
+
+        // 5. Find Method Name
+        // To highlight the class name (Default)
+        let posStart: vscode.Position = textDocument.positionAt(classNamePosition + 'class '.length);
+        let posEnd: vscode.Position = textDocument.positionAt('class '.length + classNamePosition + strPhpMethodName.length);
+        // To highlight the method name
+        if (strPhpMethodName.length > 0) {
+            let methodPosition: number = docText.indexOf(' function ' + strPhpMethodName + '(');
+            // vscode.window.showInformationMessage(JSON.stringify(methodPosition));
+            if (methodPosition === -1) {
+                // Method name Not Found
+                // rejectParent(new Error('MethodNameNotFound'));
+                errorList.push('MethodNameNotFound');
+                continue;
+            } else {
+                // Method name Found
+                posStart = textDocument.positionAt(methodPosition + ' function '.length);
+                posEnd = textDocument.positionAt(' function '.length + methodPosition + strPhpMethodName.length);
+            }
+        }
+
+        // vscode.window.showInformationMessage(strPhpNamespace);
+
+        arrResult.push({
+            uri: textDocument.uri,
+            positionStart: posStart,
+            positionEnd: posStart
+        });
+    }
+
+    if (arrResult.length === 0) {
+        if (errorList.length > 0) {
+            return Promise.reject(errorList[0]);
+        }
+    }
 
     return Promise.resolve(arrResult);
 }
