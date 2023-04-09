@@ -278,6 +278,52 @@ export function activate(context: vscode.ExtensionContext) {
                 }
                 /// END Find.
 
+                /////////////////////////////////////////////////////
+
+                /// BEGIN Parse route that contains full path controller.
+                let fullpathctr_location_summ = {
+                    found: false,
+                    is_class_path_absolute: false,
+                    class: "",
+                    class_dot: "",
+                    class_parts: [""],
+                    use_class_name: "",
+                    action: "",
+                };
+                try {
+                    let [parsed_route, error] = appRouteParser.fnTryParseRouteVer8(text);
+                    console.log('route_parser=');
+                    if (null != parsed_route) {
+                        if (parsed_route instanceof Error) {
+                            throw new Error("");
+                        }
+
+                        // parsed_route: {
+                        //     is_class_path_absolute: boolean;
+                        //     class: string;
+                        //     class_dot: string;
+                        //     class_parts: string[];
+                        //     use_class_name: string;
+                        //     action: string;
+                        // }
+
+                        fullpathctr_location_summ.found = true;
+                        fullpathctr_location_summ.is_class_path_absolute = parsed_route.is_class_path_absolute;
+                        fullpathctr_location_summ.class = parsed_route.class;
+                        fullpathctr_location_summ.class_dot = parsed_route.class_dot;
+                        fullpathctr_location_summ.class_parts = parsed_route.class_parts;
+                        fullpathctr_location_summ.use_class_name = parsed_route.use_class_name;
+                        fullpathctr_location_summ.action = parsed_route.action;
+                    }
+                } catch (error) {
+                    console.error('parsing_error=', { error });
+                }
+
+                console.log({ fullpathctr_location_summ });
+                /// END Parse route that contains full path controller.
+
+                /////////////////////////////////////////////////////
+
                 function fnOtherWay() {
                     let _pos: number = text.lastIndexOf("@");
                     let _action: string = text.substring(_pos); // "@getUser'..."
