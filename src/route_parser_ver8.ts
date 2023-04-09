@@ -84,6 +84,19 @@ export function fnTryParseRouteVer8(text: string) {
     let words: string[] = sub_text.split(',');
     // console.log({ words });
 
+    if (typeof words[0] !== 'string') {
+        return [
+            null,
+            new Error('words0_is_not_string'),
+        ];
+    }
+    if (typeof words[1] !== 'string') {
+        return [
+            null,
+            new Error('words1_is_not_string'),
+        ];
+    }
+
     let class_text: string = words[0];
     let action_text: string = words[1];
     // console.log({ class_text });

@@ -1149,13 +1149,262 @@ async function fnHandleControllerToRouteVer8(
 
     console.log(8, { strFullNamespaceWithClassWithMethod });
 
+    let res_klass_path = 'App\\Http\\Controllers\\' + strNamespaceWithClass;
+    console.log(8, { res_klass_path });
+    let res_klass_parts = res_klass_path.split('\\');
+    console.log(8, { res_klass_parts });
+    let res_klass_name = res_klass_parts[res_klass_parts.length - 1];
+    console.log(8, { res_klass_name });
+    let res_action = parsedMethodName;
+    console.log(8, { res_action });
+
+    let res_data = {
+        klass_path: res_klass_path,
+        klass_parts: res_klass_parts,
+        klass_name: res_klass_name,
+        action: res_action,
+    };
+
     let urisAll: vscode.Uri[] = [];
     let uris1 = await vscode.workspace.findFiles('routes/web.php', '{bootstrap,config,database,node_modules,storage,vendor}/**');
     let uris2 = await vscode.workspace.findFiles('routes/api.php', '{bootstrap,config,database,node_modules,storage,vendor}/**');
     urisAll.push(...uris1);
     urisAll.push(...uris2);
-    let result = await fnHandleUrisControllerToRoute(urisAll, strFullNamespaceWithClassWithMethod, resolveParent, rejectParent, progressParent, tokenParent);
+    let result = await fnHandleUrisControllerToRouteVer8(
+        urisAll,
+        res_data,
+        resolveParent,
+        rejectParent,
+        progressParent,
+        tokenParent
+    );
     // TODO: ? 8.
+}
+
+async function fnHandleUrisControllerToRouteVer8(
+    uris: vscode.Uri[],
+    controllerInfo: any,
+    resolveParent: (value: string | PromiseLike<string>) => void,
+    rejectParent: (reason?: any) => void,
+    progressParent: vscode.Progress<{ message?: string; increment?: number }>,
+    tokenParent: vscode.CancellationToken
+) {
+    // Note: uris length is exactly 2 (web.php and api.php)
+    let arrResult: MyResult[] = [];
+
+    for (let i = 0; i < uris.length; i++) {
+        fnUpdateProgressMessage(i, uris, progressParent);
+
+        const uri = uris[i];
+        let filePath: string = uri.toString();
+        console.log(TAG, 'Scanning file:', filePath);
+        // vscode.window.showInformationMessage(JSON.stringify(filePath));
+
+        // TODO: replace with async and await...
+        let textDocument: vscode.TextDocument = await vscode.workspace.openTextDocument(uri);
+        // let selection = null;
+        let docText: string = textDocument.getText();
+
+        // 1. Is PHP File?
+        if (docText.indexOf('<?') !== -1) {
+            // OK
+        } else {
+            // Not PHP File
+            // rejectParent(new Error('NotPhpFile'));
+            continue;
+        }
+
+        // let controllerInfo = {
+        //     klass_path: res_klass_path,
+        //     klass_parts: res_klass_parts,
+        //     klass_name: res_klass_name,
+        //     action: res_action,
+        // };
+
+        let summ_use = {
+            found: false,
+            raw: "",
+            has_alias: false,
+            klass_alias: Object(),
+            useable_class_name: "",
+            class: "",
+            class_dot: "",
+            class_parts: [""],
+        };
+        // BEGIN Parse use import.
+        let [results, err2] = appUseImportParser.fnTryParseUseImportVer8(docText);
+        console.log('use_import_parser=',);
+        if (null != results) {
+            for (let index = 0; index < results.length; index++) {
+                const parsed_use = results[index];
+
+                if (parsed_use instanceof Error) {
+                    continue;
+                }
+
+                if (null == parsed_use.useable_class_name) {
+                    continue;
+                }
+
+                let parsed_use_ori_klass_name = parsed_use.class_parts[parsed_use.class_parts.length - 1];
+                if (parsed_use_ori_klass_name == controllerInfo.klass_name) {
+                    summ_use.found = true;
+
+                    // raw: text,
+                    // has_alias: has_alias,
+                    // klass_alias: klass_alias,
+                    // useable_class_name: useable_class_name,
+                    // class: filtered_class,
+                    // class_dot: filtered_class_dot,
+                    // class_parts: filtered_klass_parts,
+
+                    summ_use.raw = parsed_use.raw;
+                    summ_use.has_alias = parsed_use.has_alias;
+                    summ_use.klass_alias = parsed_use.klass_alias;
+                    summ_use.useable_class_name = parsed_use.useable_class_name;
+                    summ_use.class = parsed_use.class;
+                    summ_use.class_dot = parsed_use.class_dot;
+                    summ_use.class_parts = parsed_use.class_parts;
+
+                    break;
+                }
+            }
+        }
+        // END Parse.
+
+        // BEGIN Find "Route".
+        let temp_global_position = new vscode.Position(0, 0);
+        let list_range = [];
+        let list_uri = [];
+        for (let index = 0; index < textDocument.lineCount; index++) {
+            let item_position = textDocument.lineAt(temp_global_position);
+            const cTextLine: vscode.TextLine = textDocument.lineAt(index);
+            const line: string = cTextLine.text;
+            let [parsed_route, error] = appRouteParser.fnTryParseRouteVer8(line);
+            console.log('route_parser=');
+            if (null != parsed_route) {
+                if (parsed_route instanceof Error) {
+                    continue;
+                }
+
+                // {
+                //     is_class_path_absolute: boolean;
+                //     class: string;
+                //     class_dot: string;
+                //     class_parts: string[];
+                //     use_class_name: string;
+                //     action: string;
+                // }
+
+                let fact_call_klass_name = parsed_route.use_class_name;
+                let fact_action = parsed_route.action;
+
+                if (fact_call_klass_name == summ_use.useable_class_name) {
+                    if (fact_action == controllerInfo.action) {
+                        let found_range = cTextLine.range;
+                        list_range.push(found_range);
+                        list_uri.push(textDocument.uri);
+
+                        arrResult.push({
+                            uri: textDocument.uri,
+                            positionStart: found_range.start,
+                            positionEnd: found_range.end,
+                        });
+                    }
+                }
+            }
+        }
+        // END Find "Route".
+    }
+    console.log({ arrResult });
+
+    if (arrResult.length === 1) {
+        for (let i = 0; i < arrResult.length; i++) {
+            const rec: MyResult = arrResult[i];
+
+            let showOptions: vscode.TextDocumentShowOptions = {
+                viewColumn: undefined,
+                preserveFocus: false,
+                preview: true,
+                selection: new vscode.Range(rec.positionStart, rec.positionEnd),
+            };
+            vscode.window.showTextDocument(rec.uri, showOptions);
+
+            break;
+        }
+    } else if (arrResult.length > 1) {
+        let arrStrPath: string[] = [];
+        for (let x = 0; x < arrResult.length; x++) {
+            const rec = arrResult[x];
+
+            let strOption = '';
+            strOption += rec.uri.path;
+            strOption += ' ';
+            strOption += ' - Line: ';
+            strOption += (rec.positionStart.line + 1).toString();
+
+            arrStrPath.push(strOption);
+        }
+
+        // let controllerInfo = {
+        //     klass_path: res_klass_path,
+        //     klass_parts: res_klass_parts,
+        //     klass_name: res_klass_name,
+        //     action: res_action,
+        // };
+
+        vscode.window.showQuickPick(
+            arrStrPath,
+            {
+                placeHolder: '' + controllerInfo.klass_parts.join('.') + "@" + controllerInfo.action + '',
+                ignoreFocusOut: true,
+                canPickMany: false,
+            }
+        ).then((value: string | undefined) => {
+            for (let i = 0; i < arrResult.length; i++) {
+                const rec: MyResult = arrResult[i];
+
+                let strOption = '';
+                strOption += rec.uri.path;
+                strOption += ' ';
+                strOption += ' - Line: ';
+                strOption += (rec.positionStart.line + 1).toString();
+
+                if (value === strOption) {
+                    let showOptions: vscode.TextDocumentShowOptions = {
+                        viewColumn: undefined,
+                        preserveFocus: false,
+                        preview: true,
+                        selection: new vscode.Range(rec.positionStart, rec.positionEnd),
+                    };
+                    vscode.window.showTextDocument(rec.uri, showOptions);
+
+                    break;
+                }
+            }
+        }, (reason: any) => {
+            console.log(TAG, 'onRejected:', reason);
+        });
+    } else {
+        // Search for Route::resource
+    }
+
+    progressParent.report({ increment: 100 });
+    if (arrResult.length > 0) {
+        resolveParent('ResolveFindingDone');
+        return Promise.resolve('local.ResolveFindingDone');
+    } else {
+        progressParent.report({ message: 'Declaration not found. [3]' });
+
+        setTimeout(function () {
+            progressParent.report({ increment: 100 });
+            resolveParent('ResolveFindingDone');
+        }, 3000);
+
+        return Promise.reject(new Error('local.DeclarationNotFound. [3]'));
+    }
+
+    console.log(TAG, 'fnHandleUrisControllerToRoute: done');
 }
 
 async function fnHandleUrisControllerToRoute(
