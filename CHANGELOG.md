@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 2.2.0
+
+- Support Laravel v8.x routes definition. Navigate Route <--> Controller. Eg. `Route::get('/user', [UserController::class, 'index']);`
+
 ## 2.1.7
 
 - show info "Declaration not found"
