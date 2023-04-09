@@ -40,21 +40,21 @@ or just click **EP-findBladeUsage** on statusbar
 
 ## Compatibility
 
-| Laravel Version |Status|
-|-----------------|---|
-| 10.x |Work In Progress</i>|
-| 9.x |Work In Progress</i>|
-| 8.x |Work In Progress</i>|
-| 7.x |Supported|
-| 6.x |Supported|
-| 5.8 |Supported|
-| 5.7 |Supported|
-| 5.6 |Supported|
-| 5.5 |Supported|
-| 5.4 |Supported|
-| 5.3 |Supported|
-| 5.2 |Supported|
-| 5.1 |Supported|
+| Laravel Version |Status|Extension Version|
+|-----------------|------|-----------------|
+| 10.x |Supported|2.2.0|
+| 9.x |Supported|2.2.0|
+| 8.x |Supported|2.2.0|
+| 7.x |Supported|2.1.9|
+| 6.x |Supported|2.1.9|
+| 5.8 |Supported|.|
+| 5.7 |Supported|.|
+| 5.6 |Supported|.|
+| 5.5 |Supported|.|
+| 5.4 |Supported|.|
+| 5.3 |Supported|.|
+| 5.2 |Supported|.|
+| 5.1 |Supported|.|
 
 -----------------------------------------------------------------------------------------------------------
 
