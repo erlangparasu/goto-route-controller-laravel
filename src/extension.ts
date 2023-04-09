@@ -371,16 +371,25 @@ export function activate(context: vscode.ExtensionContext) {
                     mReject = reject;
 
                     // progress.report({ increment: 1, message: '...' });
-                    fnHandleControllerToRoute(textEditor, edit, args, resolve, reject, progress, token)
+                    fnHandleControllerToRouteVer1(textEditor, edit, args, resolve, reject, progress, token)
                         .then(() => {
                             //
                         })
                         .catch((reason: any) => {
-                            try {
-                                mReject(reason);
-                            } catch (e) {
-                                // Do nothing.
-                            }
+                            fnHandleControllerToRouteVer8(textEditor, edit, args, resolve, reject, progress, token)
+                                .then(() => {
+                                    //
+                                })
+                                .catch((reason: any) => {
+                                    try {
+                                        mReject(reason);
+                                    } catch (e) {
+                                        // Do nothing.
+                                    }
+                                })
+                                .finally(() => {
+                                    //
+                                });
                         })
                         .finally(() => {
                             //
@@ -445,7 +454,7 @@ export function activate(context: vscode.ExtensionContext) {
                     .trim();
                 // console.log(strFiltered);
                 let indexStrResources = strFiltered.indexOf('resources');
-                let strr = strFiltered.substr(indexStrResources);
+                let strr = strFiltered.substring(indexStrResources);
                 // console.log(strr);
                 if (strr.indexOf('resources') === -1 || strr.indexOf('views') === -1) {
                     vscode.window.showInformationMessage(TAG + ' Oops... This file is not inside "views" directory (2)');
@@ -453,7 +462,7 @@ export function activate(context: vscode.ExtensionContext) {
                     return;
                 }
                 let indexStrViews = strr.indexOf('views');
-                strr = strr.substr(indexStrViews + 'views'.length + 1); // 1 = directory separator char
+                strr = strr.substring(indexStrViews + 'views'.length + 1); // 1 = directory separator char
                 // console.log(strr);
                 strr = strr.trim();
                 if (strr) {
@@ -753,13 +762,13 @@ function fnIsBladeFile(textEditor: vscode.TextEditor): Boolean {
         .trim();
     // console.log(strFiltered);
     let indexStrResources = strFiltered.indexOf('resources');
-    let strr = strFiltered.substr(indexStrResources);
+    let strr = strFiltered.substring(indexStrResources);
     // console.log(strr);
     if (strr.indexOf('resources') === -1 || strr.indexOf('views') === -1) {
         return false;
     }
     let indexStrViews = strr.indexOf('views');
-    strr = strr.substr(indexStrViews + 'views'.length + 1); // 1 = directory separator char
+    strr = strr.substring(indexStrViews + 'views'.length + 1); // 1 = directory separator char
     // console.log(strr);
 
     strr = strr.trim();
@@ -938,7 +947,7 @@ async function fnHandleUrisFindBladeUsage(
     console.log(TAG, 'fnHandleUrisFindBladeUsage: done');
 }
 
-async function fnHandleControllerToRoute(
+async function fnHandleControllerToRouteVer1(
     textEditor: vscode.TextEditor,
     edit: vscode.TextEditorEdit,
     args: any[],
@@ -967,7 +976,7 @@ async function fnHandleControllerToRoute(
     } else {
         // Not PHP File
         rejectParent(new Error('NotPhpFile'));
-        return;
+        return Promise.reject(new Error(''));
     }
 
     // 2. Find Namespace
@@ -977,7 +986,7 @@ async function fnHandleControllerToRoute(
     if (namespacePosition === -1) {
         // Not Found
         rejectParent(new Error('NamespaceNotFound'));
-        return;
+        return Promise.reject(new Error(''));
     }
 
     let positionNamespaceStart: vscode.Position = textDocument.positionAt(namespacePosition + 'namespace App\\Http\\Controllers'.length);
@@ -998,7 +1007,7 @@ async function fnHandleControllerToRoute(
 
     // Note: get string like: "Api\Home"
     if (strNameSpaceShort.indexOf('\\') === 0) {
-        strNameSpaceShort = strNameSpaceShort.substr(1);
+        strNameSpaceShort = strNameSpaceShort.substring(1);
     }
     // vscode.window.showInformationMessage(strNameSpaceShort);
     let strClassName = fnParseClassName(textDocument); // Note: "BookController"
@@ -1007,7 +1016,112 @@ async function fnHandleControllerToRoute(
     let strNamespaceWithClass = strNameSpaceShort + '\\' + strClassName;
     // Remove backslash (for empty namespace)
     if (strNamespaceWithClass.indexOf('\\') === 0) {
-        strNamespaceWithClass = strNamespaceWithClass.substr(1);
+        strNamespaceWithClass = strNamespaceWithClass.substring(1);
+    }
+
+    // Find method name recursively upward until we found the method name
+    let parsedMethodName: string = '';
+    let tempPositionCursor: vscode.Position = textEditor.selection.start;
+    let dooLoop: boolean = true;
+    while (dooLoop) {
+        if (textLine.lineNumber === 1) {
+            dooLoop = false;
+            break;
+        } else {
+            parsedMethodName = fnParseMethodName(textLine).trim();
+            if (parsedMethodName.length === 0) {
+                tempPositionCursor = tempPositionCursor.translate(-1);
+                textLine = textEditor.document.lineAt(tempPositionCursor);
+            } else {
+                dooLoop = false;
+                break;
+            }
+        }
+    }
+
+    let strFullNamespaceWithClassWithMethod = strNamespaceWithClass + '@' + parsedMethodName;
+    // vscode.window.showInformationMessage(strFullNamespaceWithClassWithMethod);
+    console.log(1, { strFullNamespaceWithClassWithMethod });
+
+    let urisAll: vscode.Uri[] = [];
+    let uris1 = await vscode.workspace.findFiles('routes/web.php', '{bootstrap,config,database,node_modules,storage,vendor}/**');
+    let uris2 = await vscode.workspace.findFiles('routes/api.php', '{bootstrap,config,database,node_modules,storage,vendor}/**');
+    urisAll.push(...uris1);
+    urisAll.push(...uris2);
+    let result = await fnHandleUrisControllerToRoute(urisAll, strFullNamespaceWithClassWithMethod, resolveParent, rejectParent, progressParent, tokenParent);
+    // TODO: ? 1.
+}
+
+async function fnHandleControllerToRouteVer8(
+    textEditor: vscode.TextEditor,
+    edit: vscode.TextEditorEdit,
+    args: any[],
+    resolveParent: (value: string | PromiseLike<string>) => void,
+    rejectParent: (reason?: any) => void,
+    progressParent: vscode.Progress<{ message?: string; increment?: number }>,
+    tokenParent: vscode.CancellationToken
+) {
+    let textLine: vscode.TextLine = textEditor.document.lineAt(textEditor.selection.start);
+    // let str: string = textEditor.document.getText(textEditor.selection);
+    // vscode.window.showInformationMessage(textLine.text);
+
+    let activeEditor: vscode.TextEditor = textEditor;
+    // const text = activeEditor.document.getText();
+    const text: string = textLine.text;
+    const smallNumbers: vscode.DecorationOptions[] = [];
+    const largeNumbers: vscode.DecorationOptions[] = [];
+
+    // let selection = null;
+    let textDocument = textEditor.document;
+    let docText: string = textDocument.getText();
+
+    // 1. Is PHP File?
+    if (docText.indexOf('<?') !== -1) {
+        // OK
+    } else {
+        // Not PHP File
+        rejectParent(new Error('NotPhpFile'));
+        return Promise.reject(new Error('local.NotPhpFile'));
+    }
+
+    // 2. Find Namespace
+    let strNamespacePrefix: string = '';
+    let namespacePosition: number = docText.indexOf('namespace App\\Http\\Controllers' + strNamespacePrefix + '');
+    // console.log("TCL: activate -> namespacePosition", namespacePosition)
+    if (namespacePosition === -1) {
+        // Not Found
+        rejectParent(new Error('NamespaceNotFound'));
+        return Promise.reject(new Error('local.NamespaceNotFound'));
+    }
+
+    let positionNamespaceStart: vscode.Position = textDocument.positionAt(namespacePosition + 'namespace App\\Http\\Controllers'.length);
+    let lineNamespace: vscode.TextLine = textDocument.lineAt(positionNamespaceStart);
+    // console.log("TCL: activate -> lineNamespace", lineNamespace)
+
+    let namespaceCommaPosition = lineNamespace.text.indexOf(';') + namespacePosition;
+    // console.log("TCL: activate -> namespaceCommaPosition", namespaceCommaPosition)
+    let positionNamespaceEnd: vscode.Position = textDocument.positionAt(namespaceCommaPosition);
+
+    // Note: get string like: "\Api\Home"
+    let strNameSpaceShort: string = textDocument.getText(new vscode.Range(positionNamespaceStart, positionNamespaceEnd));
+    // vscode.window.showInformationMessage(strNameSpaceShort);
+
+    // console.log("TCL: activate -> positionNamespaceStart", positionNamespaceStart)
+    // console.log("TCL: activate -> positionNamespaceEnd", positionNamespaceEnd)
+    // console.log("TCL: activate -> strNameSpaceShort ###>", strNameSpaceShort, '<###')
+
+    // Note: get string like: "Api\Home"
+    if (strNameSpaceShort.indexOf('\\') === 0) {
+        strNameSpaceShort = strNameSpaceShort.substring(1);
+    }
+    // vscode.window.showInformationMessage(strNameSpaceShort);
+    let strClassName = fnParseClassName(textDocument); // Note: "BookController"
+
+    // Note: "Api\Home\BookController"
+    let strNamespaceWithClass = strNameSpaceShort + '\\' + strClassName;
+    // Remove backslash (for empty namespace)
+    if (strNamespaceWithClass.indexOf('\\') === 0) {
+        strNamespaceWithClass = strNamespaceWithClass.substring(1);
     }
 
     // Find method name recursively upward until we found the method name
@@ -1033,12 +1147,15 @@ async function fnHandleControllerToRoute(
     let strFullNamespaceWithClassWithMethod = strNamespaceWithClass + '@' + parsedMethodName;
     // vscode.window.showInformationMessage(strFullNamespaceWithClassWithMethod);
 
+    console.log(8, { strFullNamespaceWithClassWithMethod });
+
     let urisAll: vscode.Uri[] = [];
     let uris1 = await vscode.workspace.findFiles('routes/web.php', '{bootstrap,config,database,node_modules,storage,vendor}/**');
     let uris2 = await vscode.workspace.findFiles('routes/api.php', '{bootstrap,config,database,node_modules,storage,vendor}/**');
     urisAll.push(...uris1);
     urisAll.push(...uris2);
-    await fnHandleUrisControllerToRoute(urisAll, strFullNamespaceWithClassWithMethod, resolveParent, rejectParent, progressParent, tokenParent);
+    let result = await fnHandleUrisControllerToRoute(urisAll, strFullNamespaceWithClassWithMethod, resolveParent, rejectParent, progressParent, tokenParent);
+    // TODO: ? 8.
 }
 
 async function fnHandleUrisControllerToRoute(
@@ -1171,7 +1288,7 @@ async function fnHandleUrisControllerToRoute(
         // Search for Route::resource
 
         strFullNamespaceWithClassWithMethod = strFullNamespaceWithClassWithMethod
-            .substr(
+            .substring(
                 0,
                 strFullNamespaceWithClassWithMethod.indexOf('@')
             );
@@ -1312,6 +1429,7 @@ async function fnHandleUrisControllerToRoute(
     progressParent.report({ increment: 100 });
     if (arrResult.length > 0) {
         resolveParent('ResolveFindingDone');
+        return Promise.resolve('local.ResolveFindingDone');
     } else {
         progressParent.report({ message: 'Declaration not found. [3]' });
 
@@ -1319,6 +1437,8 @@ async function fnHandleUrisControllerToRoute(
             progressParent.report({ increment: 100 });
             resolveParent('ResolveFindingDone');
         }, 3000);
+
+        return Promise.reject(new Error('local.DeclarationNotFound. [3]'));
     }
 
     console.log(TAG, 'fnHandleUrisControllerToRoute: done');
@@ -1708,7 +1828,7 @@ function fnRouteFilterStr(strInput: string): string {
         return '';
     }
 
-    return strInput.substr(offset);
+    return strInput.substring(offset);
 }
 
 function fnRgbToHex(rgb: number): string {
