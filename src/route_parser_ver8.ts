@@ -157,6 +157,10 @@ export function fnTryParseRouteVer8(text: string) {
         class_text = class_text.replace('\\', '');
     }
 
+    if (0 == class_text.indexOf('App\\')) {
+        is_absolute_path = true;
+    }
+
     let class_dot = class_text.replace(new RegExp(/[\\]{1}/gi), '.');
     // console.log('start.');
     // console.log({ class_dot });

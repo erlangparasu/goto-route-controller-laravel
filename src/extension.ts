@@ -1315,6 +1315,59 @@ async function fnHandleUrisControllerToRouteVer8(
             }
         }
         // END Find "Route".
+
+        // BEGIN Find "Route" full.
+        temp_global_position = new vscode.Position(0, 0);
+        list_range = [];
+        list_uri = [];
+        for (let index = 0; index < textDocument.lineCount; index++) {
+            const cTextLine: vscode.TextLine = textDocument.lineAt(index);
+            const line: string = cTextLine.text;
+            let [parsed_route, error] = appRouteParser.fnTryParseRouteVer8(line);
+            console.log('route_parser=');
+            if (null != parsed_route) {
+                if (parsed_route instanceof Error) {
+                    continue;
+                }
+
+                // parsed_route: {
+                //     is_class_path_absolute: boolean;
+                //     class: string;
+                //     class_dot: string;
+                //     class_parts: string[];
+                //     use_class_name: string;
+                //     action: string;
+                // }
+
+                if (parsed_route.is_class_path_absolute) {
+                    let fact_call_klass_name = parsed_route.class_parts.join('.');
+                    let fact_action = parsed_route.action;
+
+                    // let controllerInfo = {
+                    //     klass_path: res_klass_path,
+                    //     klass_parts: res_klass_parts,
+                    //     klass_name: res_klass_name,
+                    //     action: res_action,
+                    // };
+
+                    let controller_parts_dot = controllerInfo.klass_parts.join('.');
+                    if (fact_call_klass_name == controller_parts_dot) {
+                        if (fact_action == controllerInfo.action) {
+                            let found_range = cTextLine.range;
+                            list_range.push(found_range);
+                            list_uri.push(textDocument.uri);
+
+                            arrResult.push({
+                                uri: textDocument.uri,
+                                positionStart: found_range.start,
+                                positionEnd: found_range.end,
+                            });
+                        }
+                    }
+                }
+            }
+        }
+        // END Find "Route" full.
     }
     console.log({ arrResult });
 
