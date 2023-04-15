@@ -21,6 +21,7 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 import * as appRouteParser from './route_parser_v8';
+import * as appRouteParser10 from './route_parser_v10';
 import * as appUseImportParser from './use_import_parser_v8';
 
 const TAG = 'EP:';
@@ -1411,6 +1412,14 @@ async function fnHandleUrisControllerToRouteVer8(
             const cTextLine: vscode.TextLine = textDocument.lineAt(index);
             const line: string = cTextLine.text;
             let [parsed_route, error] = appRouteParser.fnTryParseRouteVer8(line);
+
+            let [a2023, e2023] = appRouteParser10.fnTryParseRouteVer10(line);
+            if (null != a2023) {
+                if (a2023.d1_has_action || a2023.d2_has_klass) {
+                    // console.log('a2023', a2023);
+                }
+            }
+
             console.log('route_parser=');
             if (null != parsed_route) {
                 if (parsed_route instanceof Error) {
