@@ -20,8 +20,8 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
-import * as appRouteParser from './route_parser_ver8';
-import * as appUseImportParser from './use_import_parser_ver8';
+import * as appRouteParser from './route_parser_v8';
+import * as appUseImportParser from './use_import_parser_v8';
 
 const TAG = 'EP:';
 
